@@ -1,5 +1,5 @@
-output*.txt
-caesar
+data/output*
+build/
 
 # Prerequisites
 *.d

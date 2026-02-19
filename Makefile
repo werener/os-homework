@@ -1,17 +1,37 @@
-CC = g++
+CC = gcc
 FLAGS = -Wall -Wextra -pedantic
 KEY = a
-lib:
-	$(CC) $(FLAGS) -c -fPIC caesar.cpp -o caesar.o
-	$(CC) $(FLAGS) -shared caesar.o -o libcaesar.so
-main: 
-	$(CC) $(FLAGS) -ldl main.cpp -o caesar
-encode:
-	make lib
-	make main
-	./caesar ./libcaesar.so $(KEY) input.txt output.txt
-decode:
-	./caesar ./libcaesar.so $(KEY) output.txt output2.txt
 
+.PHONY: all lib main clean
+
+all: lib main
+
+lib: build/libcaesar.so
+
+main: build/main
+	
 clean:
-	rm -f caesar output*.txt *.o *.a *.so *.exe
+	rm -rf build/ \
+	rm -f data/output*.txt
+
+build/libcaesar.so: build/caesar.o
+	@mkdir -p $(@D)
+	$(CC) $(FLAGS) -shared $< -o $@
+	rm -f $<
+
+build/caesar.o: caesar.c caesar.h
+	@mkdir -p $(@D)
+	$(CC) $(FLAGS) -c -fPIC caesar.c -o $@
+
+build/main: main.c
+	@mkdir -p $(@D)
+	$(CC) $(FLAGS) -ldl $< -o $@
+
+encode:
+	./build/main ./build/libcaesar.so $(KEY) \
+	./data/input.txt ./data/output.txt
+
+decode:
+	./build/main ./build/libcaesar.so $(KEY) \
+	./data/output.txt ./data/output2.txt
+
