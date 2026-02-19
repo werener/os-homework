@@ -1,23 +1,10 @@
-CXX = g++
+CC = g++
 FLAGS = -Wall -Wextra -pedantic
 lib:
-	$(CXX) $(FLAGS) -fPIC -c caesar.cpp -o caesar.o 
-	$(CXX) $(FLAGS) -shared -o libcaesar.so caesar.o
-
+	$(CC) $(FLAGS) -c -fPIC caesar.cpp -o caesar.o
+	$(CC) $(FLAGS) -shared caesar.o -o libcaesar.so
 main: 
-	$(CXX) $(FLAGS) -o main.exe main.cpp -L. -lcaesar
+	$(CC) $(FLAGS) -ldl main.cpp -o caesar
 
-all: 
-	$(CXX) $(FLAGS) -fPIC -c caesar.cpp -o caesar.o 
-	$(CXX) $(FLAGS) -shared -o libcaesar.so caesar.o 
-	$(CXX) $(FLAGS) -o main.exe main.cpp -L. -lcaesar
-run: 
-	$(CXX) $(FLAGS) -fPIC -c caesar.cpp -o caesar.o 
-	$(CXX) $(FLAGS) -shared -o libcaesar.so caesar.o 
-	$(CXX) $(FLAGS) -o main.exe main.cpp -L. -lcaesar 
-	./main.exe
-test: 
-	$(CXX) $(FLAGS) caesar.cpp test.cpp -o test.exe 
-	./test.exe
 clean:
 	rm -f main *.o *.a *.so *.exe
