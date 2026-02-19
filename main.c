@@ -1,4 +1,5 @@
-#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 #ifdef _WIN32
     #include <windows.h>
     #define DLOPEN(path) LoadLibrary(path)
@@ -16,10 +17,13 @@
 #define ENCRYPTION_ALIAS "caesar"
 #define KEY_ALIAS "caesar_key"
 
+#define dl_error DLCLOSE(handle);return 1;
+
+
 int main(int argc, char *argv[]) {
     if (argc != 5) {
         char *bin_title = argv[0];
-        std::cout << "Usecase example: " << bin_title << " <lib> <key> <path_to_src> <path_to_target>\n";
+        printf("Usecase example: %s <lib> <key> <path_to_src> <path_to_target>\n", bin_title);
         return 1;
     }
     char *lib_path = argv[1];
@@ -30,21 +34,24 @@ int main(int argc, char *argv[]) {
     /* (1) library */
     void *handle = DLOPEN(lib_path);
     if (!handle) {
-        std::cerr << "Couldn't load the library: " << DLERROR() << "\n";
+        fprintf(stderr, "Couldn't load the library: %s\n", DLERROR());
         return 1;
     }   
+    void (*caesar)(void*, void*, int) = DLSYM(handle, ENCRYPTION_ALIAS);
+    void (*caesar_key)(char) = DLSYM(handle, KEY_ALIAS);
 
-    using CaesarFunc = void(*)(void*, void*, int);
-    using CaesarKeyFunc = void(*)(char);
-    CaesarFunc caesar = reinterpret_cast<CaesarFunc>(DLSYM(handle, ENCRYPTION_ALIAS));
-    CaesarKeyFunc caesar_key = reinterpret_cast<CaesarKeyFunc>(DLSYM(handle, KEY_ALIAS));
-
-    const char* error = DLERROR();
-    if (error) {
-        std::cerr << "Error finding functions: " << error << std::endl;
-        DLCLOSE(handle);
-        return 1;
-    }
+    #ifndef _WIN32
+        const char* error = dlerror();
+        if (error) {
+            fprintf(stderr, "Error finding functions: %s\n", error);
+            dl_error
+        }
+    #else
+        if (!caesar || !caesar_key) {
+            fprintf(stderr, "Error finding functions\n");
+            dl_error
+        }
+    #endif
 
     /* (2) key */
     int i = 0;
@@ -53,8 +60,8 @@ int main(int argc, char *argv[]) {
         ch = key_arg[++i]; 
 
     if (i != 1) {
-        std::cout << "Key should be exactly 1 byte - '" << key_arg << "' isn't\n";
-        return 1;
+        fprintf(stderr, "Key should be exactly 1 byte - '%s' isn't\n", key_arg);
+        dl_error
     }
     else 
         caesar_key(key_arg[0]);
@@ -62,17 +69,16 @@ int main(int argc, char *argv[]) {
     /* (3) source_file */
     FILE* src_file = fopen(src_path, "rb");
     if (!src_file) {
-        std::cout << "Couldn't open file '" << src_path << "'\n" ;
-        DLCLOSE(handle);
-        return 1;
+        printf("Couldn't open file '%s'\n", src_path);
+        dl_error
     }
 
     /* (4) target_file */
     FILE* target_file = fopen(target_path, "wb");
     if (!target_file) {
-        std::cout << "Couldn't open file '" << target_path << "'\n" ;
-        DLCLOSE(handle);
-        return 1;
+        printf("Couldn't open file '%s'\n", target_path);
+        fclose(src_file);
+        dl_error
     }
 
     //  get source data
@@ -95,4 +101,6 @@ int main(int argc, char *argv[]) {
     fclose(target_file);
     DLCLOSE(handle);
     return 0;
+
+
 }
