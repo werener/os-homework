@@ -1,14 +1,23 @@
 CXX = g++
-CXXFLAGS = -Wall -std=c++11
-AR = ar
-ARFLAGS = rcs
+FLAGS = -Wall -Wextra -pedantic
+lib:
+	$(CXX) $(FLAGS) -fPIC -c caesar.cpp -o caesar.o 
+	$(CXX) $(FLAGS) -shared -o libcaesar.so caesar.o
 
-libcaesar.a: caesar.o
-	$(AR) $(ARFLAGS) $@ $^
+main: 
+	$(CXX) $(FLAGS) -o main.exe main.cpp -L. -lcaesar
 
-caesar.o: caesar.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-main: maina.cpp caesar.cpp
+all: 
+	$(CXX) $(FLAGS) -fPIC -c caesar.cpp -o caesar.o 
+	$(CXX) $(FLAGS) -shared -o libcaesar.so caesar.o 
+	$(CXX) $(FLAGS) -o main.exe main.cpp -L. -lcaesar
+run: 
+	$(CXX) $(FLAGS) -fPIC -c caesar.cpp -o caesar.o 
+	$(CXX) $(FLAGS) -shared -o libcaesar.so caesar.o 
+	$(CXX) $(FLAGS) -o main.exe main.cpp -L. -lcaesar 
+	./main.exe
+test: 
+	$(CXX) $(FLAGS) caesar.cpp test.cpp -o test.exe 
+	./test.exe
 clean:
-	rm -f *.o *.a
+	rm -f main *.o *.a *.so *.exe
