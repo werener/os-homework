@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include "queue.h"
 #include <sched.h>
+#include <time.h>
 
 #define CHUNK_SIZE 4096
 
@@ -13,6 +14,7 @@ typedef struct {
 
 typedef struct {
     FILE* source_file;
+    size_t src_size;
     FILE* destination_file;
     queue* q;
 } thread_args_t;

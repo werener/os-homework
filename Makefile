@@ -24,7 +24,7 @@ build/%.o: src/%.c
 	@mkdir -p $(@D)
 	$(CC) $(FLAGS) -I src -c $< -o $@
 
-run: $(target)
+run: $(target_dir)/$(target) 
 	./build/$(target) ./data/input.txt ./data/output.txt a
 	./build/$(target) ./data/output.txt ./data/output2.txt a
 	

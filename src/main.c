@@ -25,6 +25,9 @@ int main(int argc, char *argv[]) {
     FILE* src_file = fopen(src_path, "rb");
     if (!src_file) 
         printf("Couldn't open file '%s'\n", src_path);
+    fseek(src_file, 0, SEEK_END);
+    size_t src_size = ftell(src_file);
+    rewind(src_file);
 
     /* (4) open destination_file */
     FILE* dest_file = fopen(destination_path, "wb");
@@ -42,18 +45,18 @@ int main(int argc, char *argv[]) {
     thread_args_t args = { 
         .source_file = src_file, 
         .destination_file = dest_file, 
-        .q = q 
+        .q = q,
+        .src_size = src_size
     };
     pthread_t thread_reader, thread_writer;
     pthread_create(&thread_reader, NULL, reader_thread, &args);
     pthread_create(&thread_writer, NULL, writer_thread, &args);
 
-    
-    // wait for the threads to end
     pthread_join(thread_reader, NULL);
     pthread_join(thread_writer, NULL);
-    destroy_queue(q); 
 
+    // free the memory
+    destroy_queue(q); 
     fclose(src_file);
     fclose(dest_file);
     return 0;
