@@ -1,14 +1,11 @@
 #pragma once
 
 #define PROGRESS_BAR_WIDTH 25
-#define _POSIX_C_SOURCE 199309L
 #define CHUNK_SIZE 4096
 
-#include <pthread.h>
-#include "queue.h"
-#include <sched.h>
-#include <time.h>
 
+#include "queue.h"
+#include <pthread.h>
 
 typedef struct {
     char data[CHUNK_SIZE]; 

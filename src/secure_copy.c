@@ -1,6 +1,8 @@
 #include "secure_copy.h"
 #include "caesar.h"
 #include <string.h>
+#include <time.h>
+
 
 void draw_progress_bar(size_t total_bytes_written, size_t src_size) {
     printf("\r[");
