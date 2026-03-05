@@ -31,8 +31,7 @@ void* reader_thread(void* arg) {
 
 void* writer_thread(void* arg) {
     thread_args_t* args = (thread_args_t*)arg;
-    chunk_t *chunk = malloc(sizeof(chunk_t));
-
+    chunk_t *chunk;
     while (true) {
         if (get_size(args->q) == 0) {
             sched_yield();

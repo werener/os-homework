@@ -144,7 +144,6 @@ queue* copy_queue(queue* src) {
 
     // Iterate through original queue and copy nodes
     node* current = src->head;
-    node* prev_new_node = NULL;
     while (current != NULL) {
         enqueue(new_queue, current->data);
         current = current->next;
