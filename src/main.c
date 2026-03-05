@@ -1,6 +1,7 @@
 #include "caesar.h"
+#include "secure_copy.h"
 #include "string.h"
-#include "queue.h"
+
 
 int main(int argc, char *argv[]) {
     if (argc != 4) {
@@ -10,46 +11,52 @@ int main(int argc, char *argv[]) {
     }
     
     char *src_path = argv[1];
-    char *target_path = argv[2];
+    char *destination_path = argv[2];
     char *key_arg = argv[3];
 
-    /* (2) key */
+    /* (2) validate key */
     if (strlen(key_arg) != 1) {
         fprintf(stderr, "Key should be exactly 1 byte - '%s' isn't\n", key_arg);
         return 1;
     }
     caesar_key(key_arg[0]);
     
-    /* (3) source_file */
+    /* (3) open source_file */
     FILE* src_file = fopen(src_path, "rb");
     if (!src_file) 
         printf("Couldn't open file '%s'\n", src_path);
 
-    /* (4) target_file */
-    FILE* target_file = fopen(target_path, "wb");
-    if (!target_file) {
-        printf("Couldn't open file '%s'\n", target_path);
+    /* (4) open destination_file */
+    FILE* dest_file = fopen(destination_path, "wb");
+    if (!dest_file) {
+        printf("Couldn't open file '%s'\n", destination_path);
         fclose(src_file);
     }
 
-    //  get source data
-    fseek(src_file, 0, SEEK_END);
-    long size = ftell(src_file);
-    rewind(src_file); 
+    /* (5) setup queue */
+    queue *q = create_queue(sizeof(chunk_t));
+    q->mutex = malloc(sizeof(pthread_mutex_t));
+    pthread_mutex_init(q->mutex, NULL);
 
-    void *src = malloc(size);
-    fread(src, 1, size, src_file);
+    /* (6) setup threads */
+    thread_args_t args = { 
+        .source_file = src_file, 
+        .destination_file = dest_file, 
+        .q = q 
+    };
+    pthread_t thread_reader, thread_writer;
+    pthread_create(&thread_reader, NULL, reader_thread, &args);
+    pthread_create(&thread_writer, NULL, writer_thread, &args);
 
-    //  get target data
-    void *target = malloc(size);
-
-    caesar(src, target, size);
-    fwrite(target, 1, size, target_file);    //  {size} chunks with 1 byte
     
-
-    free(src);
-    free(target);
+    // wait for the threads to end
+    pthread_join(thread_reader, NULL);
+    pthread_join(thread_writer, NULL);
+    pthread_mutex_destroy(q->mutex);
+    free(q->mutex);
+    
+    destroy_queue(q);
     fclose(src_file);
-    fclose(target_file);
+    fclose(dest_file);
     return 0;
 }

@@ -12,7 +12,11 @@ clean:
 	rm -rf build/ \
 	rm -f data/output*.txt
 
-build/main: src/main.c src/caesar.c src/queue.c
+run: main
+	./build/main ./data/input.txt ./data/output.txt a
+	./build/main ./data/output.txt ./data/output2.txt a
+	
+build/main: src/main.c src/caesar.c src/queue.c src/secure_copy.c
 	@mkdir -p $(@D)
 	$(CC) $(FLAGS) $^ -o $@
 
