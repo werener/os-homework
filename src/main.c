@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* (5) setup queue */
-    queue *q = create_queue(sizeof(chunk_t));
+    queue *q = create_queue(8);
     q->mutex = malloc(sizeof(pthread_mutex_t));
     pthread_mutex_init(q->mutex, NULL);
 
