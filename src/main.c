@@ -52,10 +52,8 @@ int main(int argc, char *argv[]) {
     // wait for the threads to end
     pthread_join(thread_reader, NULL);
     pthread_join(thread_writer, NULL);
-    pthread_mutex_destroy(q->mutex);
-    free(q->mutex);
-    
-    destroy_queue(q);
+    destroy_queue(q); 
+
     fclose(src_file);
     fclose(dest_file);
     return 0;

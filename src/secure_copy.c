@@ -16,7 +16,7 @@ void* reader_thread(void* arg) {
         );
         /* 
         indicate to the other thread:
-        no bytes were read correctly  
+        some bytes were not read correctly  
         */
         chunk->is_last = (chunk->len < sizeof(chunk->data));
 

@@ -155,6 +155,8 @@ queue* copy_queue(queue* src) {
 
 void destroy_queue(queue* q) {
     clear_queue(q);
+    pthread_mutex_destroy(q->mutex); 
+    free(q->mutex);
     free(q);
 }
 
