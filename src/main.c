@@ -1,11 +1,13 @@
 #include "caesar.h"
 #include "secure_copy.h"
 #include "string.h"
-#include "signal.h"
+#include <signal.h>
+#include <unistd.h>
 
 volatile sig_atomic_t keep_running = 1;
 
 void handle_sigint(int sig) {
+    (void) sig;
     keep_running = 0;
 }
 
@@ -46,6 +48,14 @@ int main(int argc, char *argv[]) {
     rewind(src_file);
 
     /* (5) open destination_file */
+    
+    FILE* destination_check = fopen(destination_path, "rb");
+    bool destination_existed = false;
+    if (destination_check) {
+        destination_existed = true;
+        fclose(destination_check);
+    }
+
     FILE* dest_file = fopen(destination_path, "wb");
     if (!dest_file) {
         printf("Couldn't open file '%s'\n", destination_path);
@@ -67,18 +77,19 @@ int main(int argc, char *argv[]) {
 
     pthread_join(thread_reader, NULL);
     pthread_join(thread_writer, NULL);
-
-
    
     // free the memory
-    
     fclose(dest_file);
     fclose(src_file);
     destroy_queue(q);
 
     if (!keep_running) {
         printf("\n %s wasn't copied fully due to interruption  \n", destination_path);
-        unlink(destination_path); // Функция из unistd.h для удаления файла
+        if (!destination_existed) { 
+            unlink(destination_path);
+        }
+        return 1;
     }
+
     return 0;
 }
