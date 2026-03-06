@@ -54,7 +54,7 @@ void* writer_thread(void* arg) {
     clock_gettime(CLOCK_MONOTONIC, &last_update_time);
     draw_progress_bar(total_bytes_written, args->src_size);
 
-    while (keep_running) {
+    while (keep_running || get_size(args->q) > 0) {
         if (get_size(args->q) == 0) {
             sched_yield();
             continue;
