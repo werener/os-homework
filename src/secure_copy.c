@@ -20,7 +20,7 @@ void draw_progress_bar(size_t total_bytes_written, size_t src_size) {
 
 void *reader_thread(void* arg) {
     thread_args_t *args = (thread_args_t*) arg;
-    while (true) {
+    while (keep_running) {
         chunk_t *chunk = malloc(sizeof(chunk_t));
         chunk->len = fread(
             chunk->data, 
@@ -54,7 +54,7 @@ void* writer_thread(void* arg) {
     clock_gettime(CLOCK_MONOTONIC, &last_update_time);
     draw_progress_bar(total_bytes_written, args->src_size);
 
-    while (true) {
+    while (keep_running) {
         if (get_size(args->q) == 0) {
             sched_yield();
             continue;

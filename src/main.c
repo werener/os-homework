@@ -1,7 +1,13 @@
 #include "caesar.h"
 #include "secure_copy.h"
 #include "string.h"
+#include "signal.h"
 
+volatile sig_atomic_t keep_running = 1;
+
+void handle_sigint(int sig) {
+    keep_running = 0;
+}
 
 int main(int argc, char *argv[]) {
     if (argc != 4) {
@@ -14,33 +20,40 @@ int main(int argc, char *argv[]) {
     char *destination_path = argv[2];
     char *key_arg = argv[3];
 
+    signal(SIGINT, handle_sigint);
+
     /* (2) validate key */
     if (strlen(key_arg) != 1) {
         fprintf(stderr, "Key should be exactly 1 byte - '%s' isn't\n", key_arg);
         return 1;
     }
     caesar_key(key_arg[0]);
-    
-    /* (3) open source_file */
-    FILE* src_file = fopen(src_path, "rb");
-    if (!src_file) 
-        printf("Couldn't open file '%s'\n", src_path);
-    fseek(src_file, 0, SEEK_END);
-    size_t src_size = ftell(src_file);
-    rewind(src_file);
 
-    /* (4) open destination_file */
-    FILE* dest_file = fopen(destination_path, "wb");
-    if (!dest_file) {
-        printf("Couldn't open file '%s'\n", destination_path);
-        fclose(src_file);
-    }
-
-    /* (5) setup queue */
+    /* (3) setup queue */
     queue *q = create_queue(sizeof(chunk_t*));
     q->mutex = malloc(sizeof(pthread_mutex_t));
     pthread_mutex_init(q->mutex, NULL);
 
+    /* (4) open source_file */
+    FILE* src_file = fopen(src_path, "rb");
+    if (!src_file) {
+        printf("Couldn't open file '%s'\n", src_path);
+        destroy_queue(q);
+        return 1;
+    }
+    fseek(src_file, 0, SEEK_END);
+    size_t src_size = ftell(src_file);
+    rewind(src_file);
+
+    /* (5) open destination_file */
+    FILE* dest_file = fopen(destination_path, "wb");
+    if (!dest_file) {
+        printf("Couldn't open file '%s'\n", destination_path);
+        fclose(src_file);
+        destroy_queue(q);
+        return 1;
+    }
+   
     /* (6) setup threads */
     thread_args_t args = { 
         .source_file = src_file, 
@@ -55,9 +68,17 @@ int main(int argc, char *argv[]) {
     pthread_join(thread_reader, NULL);
     pthread_join(thread_writer, NULL);
 
+
+   
     // free the memory
-    destroy_queue(q); 
-    fclose(src_file);
+    
     fclose(dest_file);
+    fclose(src_file);
+    destroy_queue(q);
+
+    if (!keep_running) {
+        printf("\n %s wasn't copied fully due to interruption  \n", destination_path);
+        unlink(destination_path); // Функция из unistd.h для удаления файла
+    }
     return 0;
 }
