@@ -36,27 +36,20 @@ int main(int argc, char *argv[]) {
         fclose(src_file);
     }
 
-    /* (5) setup queue */
-    queue *q = create_queue(sizeof(chunk_t*));
-    q->mutex = malloc(sizeof(pthread_mutex_t));
-    pthread_mutex_init(q->mutex, NULL);
 
     /* (6) setup threads */
     thread_args_t args = { 
         .source_file = src_file, 
         .destination_file = dest_file, 
-        .q = q,
         .src_size = src_size
     };
     pthread_t thread_reader, thread_writer;
-    pthread_create(&thread_reader, NULL, reader_thread, &args);
-    pthread_create(&thread_writer, NULL, writer_thread, &args);
+    pthread_create(&thread_reader, NULL, worker, &args);
 
     pthread_join(thread_reader, NULL);
     pthread_join(thread_writer, NULL);
 
     // free the memory
-    destroy_queue(q); 
     fclose(src_file);
     fclose(dest_file);
     return 0;
