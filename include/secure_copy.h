@@ -5,6 +5,7 @@
 
 #include "queue.h"
 #include <pthread.h>
+#include <sys/time.h>
 
 typedef struct {
     char **src_names;

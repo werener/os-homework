@@ -29,5 +29,5 @@ $(target_dir)/%.o: $(source_dir)/%.c
 	$(CC) $(FLAGS) -I$(header_dir) -c $< -o $@
 
 run: $(target_dir)/$(target) 
-	./$(target_dir)/$(target) ./$(data_dir)/f1.txt ./$(data_dir)/out/ a
-	./$(target_dir)/$(target) ./$(data_dir)/f2.txt ./$(data_dir)/out/ a
+	./$(target_dir)/$(target) ./$(data_dir)/f1.txt ./$(data_dir)/f2.txt ./$(data_dir)/out/ a
+# 	./$(target_dir)/$(target) ./$(data_dir)/f2.txt ./$(data_dir)/out/ a

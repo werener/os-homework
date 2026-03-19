@@ -3,7 +3,9 @@
 #include "caesar.h"
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
+pthread_mutex_t counter_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void process_file(FILE *src_file, FILE *dest_file) {
     char *buffer = malloc(BUFFER_SIZE);
@@ -34,24 +36,49 @@ void process_file(FILE *src_file, FILE *dest_file) {
 void *worker(void* arg) {
     thread_args_t *args = (thread_args_t*) arg;
     
-    char *src_path_TEMP = args->src_names[args->sources_processed];
-    char *dest_path_TEMP = args->dest_name;
+    while (true) {
+        struct timespec timeout;
+        clock_gettime(CLOCK_REALTIME, &timeout);
+        timeout.tv_sec += 5;
+        
+        int lock_result = pthread_mutex_timedlock(&counter_mutex, &timeout);
+        if (lock_result == ETIMEDOUT) {
+            printf("Possible deadlock: mutex is being awaited for 5 seconds by process %s\n", "PROCESS_ID");
+            continue;
+        }
+        
+        if (args->sources_processed >= args->total_sources) {
+            pthread_mutex_unlock(&counter_mutex);
+            break;
+        }
+        
+        char *src_path_TEMP = args->src_names[args->sources_processed];
+        args->sources_processed++;
+        pthread_mutex_unlock(&counter_mutex);
+        
+        char *dest_path_TEMP = args->dest_name;
+        char *fullpath = make_copy_target(src_path_TEMP, dest_path_TEMP);
+        printf("HERE: %s\n\n", fullpath);
 
-    char *fullpath = make_copy_target(src_path_TEMP, dest_path_TEMP);
-    printf("HERE: %s\n\n", fullpath);
-
-    FILE* src_file = fopen(src_path_TEMP, "rb");
-    if (!src_file) {
-        fprintf(stderr, "Couldn't open file '%s'\n", src_path_TEMP);
-        return NULL;
-    }
-    FILE* dest_file = fopen(fullpath, "wb");
-    if (!dest_file) {
-        printf("Couldn't open file '%s' (Possibly no folder '%s')\n", fullpath, dest_path_TEMP);
+        FILE* src_file = fopen(src_path_TEMP, "rb");
+        if (!src_file) {
+            fprintf(stderr, "Couldn't open file '%s'\n", src_path_TEMP);
+            free(fullpath);
+            continue;
+        }
+        FILE* dest_file = fopen(fullpath, "wb");
+        if (!dest_file) {
+            printf("Couldn't open file '%s' (Possibly no folder '%s')\n", fullpath, dest_path_TEMP);
+            fclose(src_file);
+            free(fullpath);
+            continue;
+        }
+        process_file(src_file, dest_file);
+        
         fclose(src_file);
-        return NULL;
+        fclose(dest_file);
+        free(fullpath);
     }
-    process_file(src_file, dest_file);    
 
     return NULL;
 }

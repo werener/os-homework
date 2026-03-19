@@ -32,11 +32,12 @@ int main(int argc, char **argv) {
         .total_sources = num_sources,
         .sources_processed = 0,
     };
-    pthread_t thread1;//, thread2, thread3;
+    pthread_t thread1, thread2; 
     pthread_create(&thread1, NULL, worker, &args);
+    pthread_create(&thread2, NULL, worker, &args);
 
     pthread_join(thread1, NULL);
-    // pthread_join(thread_writer, NULL);
+    pthread_join(thread2, NULL);
 
     // free the memory
     return 0;
