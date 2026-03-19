@@ -12,9 +12,9 @@ int main(int argc, char **argv) {
     }
     
     int num_sources = argc - 3;
-    char *src_path = &argv[1];
+    char **sources = &argv[1];
 
-    char *destination_path = argv[argc - 2];
+    char *destination_folder = argv[argc - 2];
     char *key_arg = argv[argc - 1];
 
     /* (2) validate key */
@@ -27,14 +27,16 @@ int main(int argc, char **argv) {
 
     /* (6) setup threads */
     thread_args_t args = { 
-        .src_names = src_path, 
-        .dest_name = destination_path, 
+        .src_names = sources, 
+        .dest_name = destination_folder, 
+        .total_sources = num_sources,
+        .sources_processed = 0,
     };
-    pthread_t thread_reader, thread_writer;
-    pthread_create(&thread_reader, NULL, worker, &args);
+    pthread_t thread1;//, thread2, thread3;
+    pthread_create(&thread1, NULL, worker, &args);
 
-    pthread_join(thread_reader, NULL);
-    pthread_join(thread_writer, NULL);
+    pthread_join(thread1, NULL);
+    // pthread_join(thread_writer, NULL);
 
     // free the memory
     return 0;

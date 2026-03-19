@@ -9,6 +9,8 @@
 typedef struct {
     char **src_names;
     char *dest_name;
+    int total_sources;
+    int sources_processed;
 } thread_args_t;
 
 void *worker(void* arg);

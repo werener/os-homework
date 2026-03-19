@@ -28,23 +28,26 @@ void process_file(FILE *src_file, FILE *dest_file) {
 
     free(buffer);
     free(processed);
-    
     return;
 }
 
 void *worker(void* arg) {
     thread_args_t *args = (thread_args_t*) arg;
-    char *src_path_TEMP = args->src_names[0];
+    
+    char *src_path_TEMP = args->src_names[args->sources_processed];
     char *dest_path_TEMP = args->dest_name;
-    printf("HERE: %s\n\n", make_copy_target(src_path_TEMP, dest_path_TEMP));
+
+    char *fullpath = make_copy_target(src_path_TEMP, dest_path_TEMP);
+    printf("HERE: %s\n\n", fullpath);
+
     FILE* src_file = fopen(src_path_TEMP, "rb");
     if (!src_file) {
         fprintf(stderr, "Couldn't open file '%s'\n", src_path_TEMP);
         return NULL;
     }
-    FILE* dest_file = fopen(dest_path_TEMP, "wb");
+    FILE* dest_file = fopen(fullpath, "wb");
     if (!dest_file) {
-        printf("Couldn't open file '%s'\n", dest_path_TEMP);
+        printf("Couldn't open file '%s' (Possibly no folder '%s')\n", fullpath, dest_path_TEMP);
         fclose(src_file);
         return NULL;
     }

@@ -17,6 +17,7 @@ main: $(target_dir)/$(target)
 
 clean:
 	rm -rf $(target_dir)/
+	rm -rf $(data_dir)/out/*
 	rm -f $(data_dir)/output*.txt
 
 $(target_dir)/$(target): $(objects)
@@ -28,9 +29,5 @@ $(target_dir)/%.o: $(source_dir)/%.c
 	$(CC) $(FLAGS) -I$(header_dir) -c $< -o $@
 
 run: $(target_dir)/$(target) 
-	./$(target_dir)/$(target) ./$(data_dir)/f1.txt ./$(data_dir)/out a
-	./$(target_dir)/$(target) ./$(data_dir)/output.txt ./$(data_dir)/out a
-
-test: run
-	@echo "Difference of input and output: \n" 
-	@diff data/input.txt data/output2.txt
+	./$(target_dir)/$(target) ./$(data_dir)/f1.txt ./$(data_dir)/out/ a
+	./$(target_dir)/$(target) ./$(data_dir)/f2.txt ./$(data_dir)/out/ a
