@@ -1,5 +1,14 @@
 #include "filepath.h"
 
+
+int is_directory(const char *path) {
+    struct stat path_stat;
+    if (stat(path, &path_stat) != 0) {
+        return 0; // Error - file doesn't exist or can't be accessed
+    }
+    return S_ISDIR(path_stat.st_mode);
+}
+
 char *make_copy_target(char *source_file, char *out_folder) {
     char *filename;
     char *result;

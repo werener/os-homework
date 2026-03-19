@@ -4,6 +4,8 @@
 #define BUFFER_SIZE 4096
 
 #include "queue.h"
+#include "logging.h"
+#include "filepath.h"
 #include <pthread.h>
 #include <sys/time.h>
 
@@ -15,4 +17,4 @@ typedef struct {
 } thread_args_t;
 
 void *worker(void* arg);
-void process_file(FILE *src_file, FILE *dest_file);
+void process_file(FILE *src_file, FILE *dest_file, const char *filename);

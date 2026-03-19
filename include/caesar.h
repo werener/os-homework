@@ -1,7 +1,9 @@
+#pragma once
+
 #include <stdio.h>
 #include <stdlib.h>
 
-#pragma once
+
 
 
 void caesar(void *src_ptr, void *target_ptr, int len);

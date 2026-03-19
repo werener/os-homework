@@ -2,7 +2,6 @@
 #include "secure_copy.h"
 #include "string.h"
 
-
 int main(int argc, char **argv) {
     /* (1) handle arguments */
     if (argc < 4) {
@@ -32,13 +31,30 @@ int main(int argc, char **argv) {
         .total_sources = num_sources,
         .sources_processed = 0,
     };
-    pthread_t thread1, thread2; 
+    /* setup logging */
+   
+    log_file = fopen("log.txt", "a");
+    if (!log_file) {
+        perror("Failed to create log.txt");
+        return 1;
+    }
+
+    log_custom_message("\tStarted logging\n");
+
+    pthread_t thread1, thread2, thread3; 
     pthread_create(&thread1, NULL, worker, &args);
     pthread_create(&thread2, NULL, worker, &args);
+    pthread_create(&thread3, NULL, worker, &args);
 
     pthread_join(thread1, NULL);
     pthread_join(thread2, NULL);
+    pthread_join(thread3, NULL);
 
     // free the memory
+    log_custom_message("\tFinished logging\n\n");
+    close_log();
+
+    
     return 0;
+
 }
