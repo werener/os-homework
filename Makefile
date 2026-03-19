@@ -30,3 +30,7 @@ $(target_dir)/%.o: $(source_dir)/%.c
 run: $(target_dir)/$(target) 
 	./$(target_dir)/$(target) ./$(data_dir)/input.txt ./$(data_dir)/output.txt a
 	./$(target_dir)/$(target) ./$(data_dir)/output.txt ./$(data_dir)/output2.txt a
+
+test: run
+	@echo "Difference of input and output: \n" 
+	@diff data/input.txt data/output2.txt

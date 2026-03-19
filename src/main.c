@@ -3,16 +3,19 @@
 #include "string.h"
 
 
-int main(int argc, char *argv[]) {
-    if (argc != 4) {
+int main(int argc, char **argv) {
+    /* (1) handle arguments */
+    if (argc < 4) {
         char *bin_title = argv[0];
-        printf("Usecase example: %s <path_to_src> <path_to_target> <key>\n", bin_title);
+        printf("Usecase example: %s <FILE> [FILES...] <COPY_DIR> <KEY>\n", bin_title);
         return 1;
     }
     
-    char *src_path = argv[1];
-    char *destination_path = argv[2];
-    char *key_arg = argv[3];
+    int num_sources = argc - 3;
+    char *src_path = &argv[1];
+
+    char *destination_path = argv[argc - 2];
+    char *key_arg = argv[argc - 1];
 
     /* (2) validate key */
     if (strlen(key_arg) != 1) {
@@ -21,27 +24,11 @@ int main(int argc, char *argv[]) {
     }
     caesar_key(key_arg[0]);
     
-    /* (3) open source_file */
-    FILE* src_file = fopen(src_path, "rb");
-    if (!src_file) 
-        printf("Couldn't open file '%s'\n", src_path);
-    fseek(src_file, 0, SEEK_END);
-    size_t src_size = ftell(src_file);
-    rewind(src_file);
-
-    /* (4) open destination_file */
-    FILE* dest_file = fopen(destination_path, "wb");
-    if (!dest_file) {
-        printf("Couldn't open file '%s'\n", destination_path);
-        fclose(src_file);
-    }
-
 
     /* (6) setup threads */
     thread_args_t args = { 
-        .source_file = src_file, 
-        .destination_file = dest_file, 
-        .src_size = src_size
+        .src_names = src_path, 
+        .dest_name = destination_path, 
     };
     pthread_t thread_reader, thread_writer;
     pthread_create(&thread_reader, NULL, worker, &args);
@@ -50,7 +37,5 @@ int main(int argc, char *argv[]) {
     pthread_join(thread_writer, NULL);
 
     // free the memory
-    fclose(src_file);
-    fclose(dest_file);
     return 0;
 }

@@ -31,5 +31,21 @@ void process_file(FILE *src_file, FILE *dest_file) {
 }
 void *worker(void* arg) {
     thread_args_t *args = (thread_args_t*) arg;
-    process_file(args->source_file, args->destination_file);    
+    char *src_path_TEMP = args->src_names[0];
+    char *dest_path_TEMP = args->dest_name;
+
+    FILE* src_file = fopen(src_path_TEMP, "rb");
+    if (!src_file) {
+        printf("Couldn't open file '%s'\n", src_path_TEMP);
+        return NULL;
+    }
+    FILE* dest_file = fopen(dest_path_TEMP, "wb");
+    if (!dest_file) {
+        printf("Couldn't open file '%s'\n", dest_path_TEMP);
+        fclose(src_file);
+        return NULL;
+    }
+    process_file(src_file, dest_file);    
+
+    return NULL;
 }

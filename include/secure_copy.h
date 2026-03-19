@@ -7,10 +7,8 @@
 #include <pthread.h>
 
 typedef struct {
-    FILE* source_file;
-    size_t src_size;
-    FILE* destination_file;
-    queue* q;
+    char **src_names;
+    char *dest_name;
 } thread_args_t;
 
 void *worker(void* arg);
