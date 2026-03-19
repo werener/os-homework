@@ -1,32 +1,36 @@
 CC = gcc
-FLAGS = -Wall -Wextra -pedantic
+
+header_dir = include
+target_dir = build
+source_dir = src
+data_dir = data
+
+FLAGS = -Wall -Wextra -pedantic -I $(header_dir)
 
 target = secure_copy
-target_dir = build
-
 sources = queue.c caesar.c secure_copy.c main.c
-objects = $(addprefix build/, $(sources:.c=.o))
+objects = $(addprefix $(target_dir)/, $(sources:.c=.o))
 
 
-.PHONY: all clean
+.PHONY: main clean
 
 main: $(target_dir)/$(target) 
 
 clean:
-	rm -rf build/ \
-	rm -f data/output*.txt
+	rm -rf $(target_dir)/ \
+	rm -f $(data_dir)/output*.txt
 
 $(target_dir)/$(target): $(objects)
 	@mkdir -p $(@D)
 	$(CC) $(FLAGS) $^ -o $@
 
-build/%.o: src/%.c
+$(target_dir)/%.o: $(src_dir)/%.c
 	@mkdir -p $(@D)
-	$(CC) $(FLAGS) -I src -c $< -o $@
+	$(CC) $(FLAGS) -I $(src_dir) -c $< -o $@
 
 run: $(target_dir)/$(target) 
-	./build/$(target) ./data/input.txt ./data/output.txt a
-	./build/$(target) ./data/output.txt ./data/output2.txt a
+	./$(target_dir)/$(target) ./$(data_dir)/input.txt ./$(data_dir)/output.txt a
+	./$(target_dir)/$(target) ./$(data_dir)/output.txt ./$(data_dir)/output2.txt a
 	
 
 
