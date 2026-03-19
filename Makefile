@@ -8,7 +8,7 @@ data_dir = data
 FLAGS = -Wall -Wextra -pedantic -I$(header_dir)
 
 target = secure_copy
-sources = queue.c caesar.c secure_copy.c main.c
+sources = queue.c caesar.c secure_copy.c main.c filepath.c
 objects = $(addprefix $(target_dir)/, $(sources:.c=.o))
 
 .PHONY: main clean run
@@ -28,8 +28,8 @@ $(target_dir)/%.o: $(source_dir)/%.c
 	$(CC) $(FLAGS) -I$(header_dir) -c $< -o $@
 
 run: $(target_dir)/$(target) 
-	./$(target_dir)/$(target) ./$(data_dir)/input.txt ./$(data_dir)/output.txt a
-	./$(target_dir)/$(target) ./$(data_dir)/output.txt ./$(data_dir)/output2.txt a
+	./$(target_dir)/$(target) ./$(data_dir)/f1.txt ./$(data_dir)/out a
+	./$(target_dir)/$(target) ./$(data_dir)/output.txt ./$(data_dir)/out a
 
 test: run
 	@echo "Difference of input and output: \n" 

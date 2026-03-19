@@ -1,7 +1,9 @@
 #include "secure_copy.h"
+#include "filepath.h"
 #include "caesar.h"
 #include <string.h>
 #include <stdlib.h>
+
 
 void process_file(FILE *src_file, FILE *dest_file) {
     char *buffer = malloc(BUFFER_SIZE);
@@ -29,14 +31,15 @@ void process_file(FILE *src_file, FILE *dest_file) {
     
     return;
 }
+
 void *worker(void* arg) {
     thread_args_t *args = (thread_args_t*) arg;
     char *src_path_TEMP = args->src_names[0];
     char *dest_path_TEMP = args->dest_name;
-
+    printf("HERE: %s\n\n", make_copy_target(src_path_TEMP, dest_path_TEMP));
     FILE* src_file = fopen(src_path_TEMP, "rb");
     if (!src_file) {
-        printf("Couldn't open file '%s'\n", src_path_TEMP);
+        fprintf(stderr, "Couldn't open file '%s'\n", src_path_TEMP);
         return NULL;
     }
     FILE* dest_file = fopen(dest_path_TEMP, "wb");
