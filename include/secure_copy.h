@@ -1,13 +1,13 @@
 #pragma once
 
+#include <stdio.h>
+#include <pthread.h>
+#include <sys/time.h>
+
 #define PROGRESS_BAR_WIDTH 25
 #define BUFFER_SIZE 4096
 
-#include "queue.h"
-#include "logging.h"
-#include "filepath.h"
-#include <pthread.h>
-#include <sys/time.h>
+
 
 typedef struct {
     char **src_names;

@@ -1,5 +1,6 @@
 #include "logging.h"
 #include <sys/syscall.h>
+#include <unistd.h>
 
 FILE *log_file = NULL;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;

@@ -1,10 +1,12 @@
 #include "secure_copy.h"
 #include "caesar.h"
 
+#include <asm-generic/errno.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
-
+#include "logging.h"
+#include "filepath.h"
 
 pthread_mutex_t counter_mutex = PTHREAD_MUTEX_INITIALIZER;
 void process_file(FILE *src_file, FILE *dest_file, const char *filename) {
