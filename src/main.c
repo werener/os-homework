@@ -61,9 +61,6 @@ int main(int argc, char **argv) {
         .sources_processed = 0,
     };
 
-    if (mode == MODE_AUTO)
-        mode = num_sources <= 4 ? MODE_SEQUENTIAL : MODE_PARALLEL;
-
     /* Validate key */
     char *key_arg = argv[argc - 1];
     if (strlen(key_arg) != 1) {
@@ -84,26 +81,63 @@ int main(int argc, char **argv) {
     double execution_time;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
+    // if (mode == MODE_AUTO)
+    //     mode = num_sources <= 4 ? MODE_SEQUENTIAL : MODE_PARALLEL;
+
     if (mode == MODE_PARALLEL) {
         log_custom_message("\tStarted logging parallel execution\n");
         pthread_t pool[WORKER_COUNT];
-        for (int i = 0; i < WORKER_COUNT; ++i) {
+        for (int i = 0; i < WORKER_COUNT; ++i)
             pthread_create(&pool[i], NULL, worker, &args);
-        }
-        for (int i = 0; i < WORKER_COUNT; ++i) {
+
+        for (int i = 0; i < WORKER_COUNT; ++i)
             pthread_join(pool[i], NULL);
-        }
-    } 
-    else if (mode == MODE_SEQUENTIAL) {
+    } else if (mode == MODE_SEQUENTIAL) {
         log_custom_message("\tStarted logging sequential execution\n");
         sequential(args);
+    } else {
+        double execution_time_parallel, execution_time_sequential;
+        // PARALLEL
+        log_custom_message("\tStarted logging parallel execution\n");
+        printf("Parallel:\n");
+        pthread_t pool[WORKER_COUNT];
+        for (int i = 0; i < WORKER_COUNT; ++i)
+            pthread_create(&pool[i], NULL, worker, &args);
+
+        for (int i = 0; i < WORKER_COUNT; ++i)
+            pthread_join(pool[i], NULL);
+        log_custom_message("\tFinished logging\n\n");
+
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        execution_time_parallel = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+        // SEQUENTIAL
+        log_custom_message("\tStarted logging sequential execution\n");
+        printf("Sequential:\n");
+        args_t args = {
+            .src_names = &argv[optind],
+            .dest_name = argv[argc - 2],
+            .total_sources = num_sources,
+            .sources_processed = 0,
+        };
+        sequential(args);
+        log_custom_message("\tFinished logging\n\n");
+
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        execution_time_sequential = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+        printf("Execution time:\n\tParallel: %f seconds\n\tSequential: %f seconds\n", execution_time_parallel, execution_time_sequential);
+        printf("Average time per file:\n\tParallel: %f seconds\n\tSequential: %f seconds\n",
+               execution_time_parallel / args.total_sources,
+               execution_time_sequential / args.total_sources);
     }
 
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    execution_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-    printf("Execution time: %f seconds\n", execution_time);
+    if (mode != MODE_AUTO) {
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        execution_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+        printf("Execution time: %f seconds\n", execution_time);
+        printf("Average time per file: %f seconds\n", execution_time / args.total_sources);
 
-    log_custom_message("\tFinished logging\n\n");
+        log_custom_message("\tFinished logging\n\n");
+    }
     close_log();
     return 0;
 }

@@ -37,7 +37,7 @@ run: $(target_dir)/$(target)
 	./$(target_dir)/$(target) $(testset) ./$(data_dir)/out/ a
 
 showcase: $(target_dir)/$(target)
-	@echo -e "Running sequential mode:\n"
+	@echo -e "\nRunning sequential mode:\n"
 	./$(target_dir)/$(target) $(testset) -m=sequential ./$(data_dir)/out/ a
-	@echo -e "Running parallel mode:\n"
+	@echo -e "\nRunning parallel mode:\n"
 	./$(target_dir)/$(target) $(testset) -m=parallel ./$(data_dir)/out/ a
