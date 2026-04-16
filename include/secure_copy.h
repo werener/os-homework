@@ -1,13 +1,11 @@
 #pragma once
 
-#include <stdio.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <sys/time.h>
 
-#define PROGRESS_BAR_WIDTH 25
+#define DEADLOCK_DETECTION_TIMER_SEC 5
 #define BUFFER_SIZE 4096
-
-
 
 typedef struct {
     char **src_names;
@@ -16,6 +14,6 @@ typedef struct {
     int sources_processed;
 } args_t;
 
-void *worker(void* arg);
+void *worker(void *arg);
 void process_file(FILE *src_file, FILE *dest_file, const char *filename);
 void sequential(args_t args);

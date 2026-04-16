@@ -1,6 +1,6 @@
 #pragma once
-#include "stdio.h"
 #include "pthread.h"
+#include "stdio.h"
 
 extern FILE *log_file;
 extern pthread_mutex_t log_mutex;
