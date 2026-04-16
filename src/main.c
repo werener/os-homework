@@ -13,6 +13,9 @@
 #define MODE_SEQUENTIAL 0
 #define MODE_PARALLEL 1
 
+double run_parallel(args_t args);
+double run_sequential(args_t args);
+
 int main(int argc, char **argv) {
     const char *bin_title = argv[0];
     int opt;
@@ -85,45 +88,17 @@ int main(int argc, char **argv) {
     //     mode = num_sources <= 4 ? MODE_SEQUENTIAL : MODE_PARALLEL;
 
     if (mode == MODE_PARALLEL) {
-        log_custom_message("\tStarted logging parallel execution\n");
-        pthread_t pool[WORKER_COUNT];
-        for (int i = 0; i < WORKER_COUNT; ++i)
-            pthread_create(&pool[i], NULL, worker, &args);
-
-        for (int i = 0; i < WORKER_COUNT; ++i)
-            pthread_join(pool[i], NULL);
+        execution_time = run_parallel(args);
+        printf("Execution time: %f seconds\n", execution_time);
+        printf("Average time per file: %f seconds\n", execution_time / args.total_sources);
     } else if (mode == MODE_SEQUENTIAL) {
-        log_custom_message("\tStarted logging sequential execution\n");
-        sequential(args);
+        execution_time = run_sequential(args);
+        printf("Execution time: %f seconds\n", execution_time);
+        printf("Average time per file: %f seconds\n", execution_time / args.total_sources);
     } else {
-        double execution_time_parallel, execution_time_sequential;
-        // PARALLEL
-        log_custom_message("\tStarted logging parallel execution\n");
-        printf("Parallel:\n");
-        pthread_t pool[WORKER_COUNT];
-        for (int i = 0; i < WORKER_COUNT; ++i)
-            pthread_create(&pool[i], NULL, worker, &args);
+        double execution_time_parallel = run_parallel(args);
+        double execution_time_sequential = run_sequential(args);
 
-        for (int i = 0; i < WORKER_COUNT; ++i)
-            pthread_join(pool[i], NULL);
-        log_custom_message("\tFinished logging\n\n");
-
-        clock_gettime(CLOCK_MONOTONIC, &end);
-        execution_time_parallel = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-        // SEQUENTIAL
-        log_custom_message("\tStarted logging sequential execution\n");
-        printf("Sequential:\n");
-        args_t args = {
-            .src_names = &argv[optind],
-            .dest_name = argv[argc - 2],
-            .total_sources = num_sources,
-            .sources_processed = 0,
-        };
-        sequential(args);
-        log_custom_message("\tFinished logging\n\n");
-
-        clock_gettime(CLOCK_MONOTONIC, &end);
-        execution_time_sequential = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
         printf("Execution time:\n\tParallel: %f seconds\n\tSequential: %f seconds\n", execution_time_parallel, execution_time_sequential);
         printf("Average time per file:\n\tParallel: %f seconds\n\tSequential: %f seconds\n",
                execution_time_parallel / args.total_sources,
@@ -131,13 +106,38 @@ int main(int argc, char **argv) {
     }
 
     if (mode != MODE_AUTO) {
-        clock_gettime(CLOCK_MONOTONIC, &end);
-        execution_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-        printf("Execution time: %f seconds\n", execution_time);
-        printf("Average time per file: %f seconds\n", execution_time / args.total_sources);
-
-        log_custom_message("\tFinished logging\n\n");
     }
+
     close_log();
     return 0;
+}
+double run_parallel(args_t args) {
+    printf("\nRunning in parallel mode\n");
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+
+    log_custom_message("\tStarted logging parallel execution\n");
+    pthread_t pool[WORKER_COUNT];
+    for (int i = 0; i < WORKER_COUNT; ++i)
+        pthread_create(&pool[i], NULL, worker, &args);
+
+    for (int i = 0; i < WORKER_COUNT; ++i)
+        pthread_join(pool[i], NULL);
+    log_custom_message("\tFinished logging\n\n");
+
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    return (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+}
+
+double run_sequential(args_t args) {
+    printf("\nRunning in sequential mode\n");
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+
+    log_custom_message("\tStarted logging sequential execution\n");
+    sequential(args);
+    log_custom_message("\tFinished logging\n\n");
+
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    return (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 }
