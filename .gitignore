@@ -2,6 +2,9 @@ data/output*
 data/out/*
 build/
 
+log.log
+compile_flags.txt
+
 # Prerequisites
 *.d
 

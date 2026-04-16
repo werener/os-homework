@@ -1,3 +1,5 @@
+SHELL = /bin/bash
+
 CC = gcc
 
 header_dir = include
@@ -10,9 +12,8 @@ FLAGS = -Wall -Wextra -pedantic -I$(header_dir)
 target = secure_copy
 sources = queue.c caesar.c secure_copy.c main.c filepath.c logging.c
 objects = $(addprefix $(target_dir)/, $(sources:.c=.o))
-
-files = f1 f2 f3 f4
-testset = $(addprefix ./$(data_dir)/,$(addsuffix .txt,$(files)))
+	
+testset = $(shell echo ./$(data_dir)/f{1..8}.txt)
 
 .PHONY: main clean run
 
@@ -22,7 +23,7 @@ clean:
 	rm -rf $(target_dir)/
 	rm -rf $(data_dir)/out
 	@mkdir -p $(data_dir)/out
-	rm -f log.txt
+	rm -f log.log
 
 $(target_dir)/$(target): $(objects)
 	@mkdir -p $(@D)
@@ -34,3 +35,9 @@ $(target_dir)/%.o: $(source_dir)/%.c
 
 run: $(target_dir)/$(target) 
 	./$(target_dir)/$(target) $(testset) ./$(data_dir)/out/ a
+
+showcase: $(target_dir)/$(target)
+	@echo -e "Running sequential mode:\n"
+	./$(target_dir)/$(target) $(testset) -m=sequential ./$(data_dir)/out/ a
+	@echo -e "Running parallel mode:\n"
+	./$(target_dir)/$(target) $(testset) -m=parallel ./$(data_dir)/out/ a

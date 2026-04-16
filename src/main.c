@@ -9,9 +9,9 @@
 
 #define WORKER_COUNT 4
 
-#define mode_auto -1
-#define mode_sequential 0
-#define mode_parallel 1
+#define MODE_AUTO -1
+#define MODE_SEQUENTIAL 0
+#define MODE_PARALLEL 1
 
 
 
@@ -20,11 +20,11 @@ int main(int argc, char **argv) {
     int opt;
     int option_index = 0;
     
-    
-    int mode = mode_auto;
+
+    int mode = MODE_AUTO;
     static struct option long_options[] = {
-        {"mode", optional_argument, 0, 'm'},  // --mode=value or --mode value
-        {0, 0, 0, 0}  // Terminator entry - must be all zeros
+        {"mode", optional_argument, 0, 'm'},
+        {0, 0, 0, 0} 
     };
 
     while ((opt = getopt_long(argc, (char * const *)argv, "m:", long_options, &option_index)) != -1) {
@@ -33,14 +33,15 @@ int main(int argc, char **argv) {
             if (optarg[0] == '=')
                 optarg += 1;
             if (strcmp(optarg, "sequential") == 0) {
-                mode = mode_sequential;
+                mode = MODE_SEQUENTIAL;
                 break; 
             }
             if (strcmp(optarg, "parallel") == 0) {
-                mode = mode_parallel;
+                mode = MODE_PARALLEL;
                 break; 
             }
             printf("No mod '%s' availiable\n", optarg);
+            /* fallthrough */
         default:
             fprintf(stderr, "Usecase example: %s <FILE> [FILES...] <COPY_DIR> <KEY>\n", bin_title);
             return 1;
@@ -50,65 +51,71 @@ int main(int argc, char **argv) {
     int remaining_args = argc - optind;
 
     // printf("%d, %d: %s\n", optind, remaining_args, argv[optind]);
-     if (remaining_args < 3) {
+    if (remaining_args < 3) {
         printf("Usecase example: %s <FILE> [FILES...] <COPY_DIR> <KEY>\n", bin_title);
         return 1;
     }
     
     int num_sources = remaining_args - 2;
-    char **sources = &argv[optind];
-
-    char *destination_folder = argv[argc - 2];
     char *key_arg = argv[argc - 1];
 
-    if (mode == mode_auto) {
-        if (num_sources <= 4) 
-            mode = mode_sequential;
-        else
-            mode = mode_parallel;
-    }
+    args_t args = { 
+        .src_names = &argv[optind], 
+        .dest_name = argv[argc - 2], 
+        .total_sources = num_sources,
+        .sources_processed = 0,
+    };
+
+    if (mode == MODE_AUTO) 
+        mode = num_sources <= 4 ? MODE_SEQUENTIAL : MODE_PARALLEL;
    
-
-
     /* (2) validate key */
     if (strlen(key_arg) != 1) {
         fprintf(stderr, "Key should be exactly 1 byte - '%s' isn't\n", key_arg);
         return 1;
     }
     caesar_key(key_arg[0]);
-    
-
-    return 0;
-    /* (3) setup threads */
-    thread_args_t args = { 
-        .src_names = sources, 
-        .dest_name = destination_folder, 
-        .total_sources = num_sources,
-        .sources_processed = 0,
-    };
-    /* setup logging */
-   
-    log_file = fopen("log.txt", "a");
+  
+    /* (3) setup logging */
+    log_file = fopen("log.log", "a");
     if (!log_file) {
         perror("Failed to create log.txt");
         return 1;
     }
 
-    log_custom_message("\tStarted logging\n");
 
-    pthread_t pool[WORKER_COUNT];
-    for (int i = 0; i < WORKER_COUNT; ++i) {
-        pthread_create(&pool[i], NULL, worker, &args);
-    }
-    for (int i = 0; i < WORKER_COUNT; ++i) {
-        pthread_join(pool[i], NULL);;
-    }
 
-    // free the memory
+    struct timespec start, end;
+    double execution_time;
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    // PARALLEL
+    if (mode == MODE_PARALLEL) {
+        log_custom_message("\tStarted logging parallel execution\n");
+        pthread_t pool[WORKER_COUNT];
+        for (int i = 0; i < WORKER_COUNT; ++i) {
+            pthread_create(&pool[i], NULL, worker, &args);
+        }
+        for (int i = 0; i < WORKER_COUNT; ++i) {
+            pthread_join(pool[i], NULL);;
+        }
+    }
+    // SEQUENTIAL
+    else {
+        // pthread_t thread;
+        log_custom_message("\tStarted logging sequential execution\n");
+
+        sequential(args);
+    }
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    execution_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+
+
+    printf("Execution time: %f seconds\n", execution_time);
     log_custom_message("\tFinished logging\n\n");
-    close_log();
 
-    
+    close_log();
     return 0;
 
 }

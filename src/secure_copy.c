@@ -41,7 +41,7 @@ void process_file(FILE *src_file, FILE *dest_file, const char *filename) {
 }
 
 void *worker(void* arg) {
-    thread_args_t *args = (thread_args_t*) arg;
+    args_t *args = (args_t*) arg;
     
     while (true) {
         struct timespec timeout;
@@ -65,7 +65,8 @@ void *worker(void* arg) {
         char *filename = args->src_names[currently_processing];
 
         if (is_directory(filename)) {
-            printf("(%i/%i) %s is a folder. Can't process it.\n",  currently_processing, args->total_sources, filename);            // continue; // FOR ARTIFICIAL DEADLOCK
+            printf("(%i/%i) %s is a folder. Can't process it.\n",  currently_processing, args->total_sources, filename);            
+            // continue; // FOR ARTIFICIAL DEADLOCK
             pthread_mutex_unlock(&counter_mutex);
             continue;
         }
@@ -99,4 +100,48 @@ void *worker(void* arg) {
     }
 
     return NULL;
+}
+
+void sequential(args_t args) {
+
+    while (args.sources_processed < args.total_sources) {
+
+        int currently_processing = args.sources_processed;
+        args.sources_processed++;
+        char *filename = args.src_names[currently_processing];
+
+        if (is_directory(filename)) {
+            printf("(%i/%i) %s is a folder. Can't process it.\n",  currently_processing, args.total_sources, filename);
+            continue;
+        }
+
+        fprintf(stderr, "(%i/%i) Processing '%s'.\n", currently_processing, args.total_sources, filename);
+        
+        
+        char *destination_folder = args.dest_name;
+        char *fullpath = make_copy_target(filename, destination_folder);
+        
+        FILE *src_file = fopen(filename, "rb");
+        if (!src_file) {
+            fprintf(stderr, "Couldn't open file '%s'\n", filename);
+            write_to_log(filename, "ERROR: Couldn't open source file");
+            free(fullpath);
+            continue;
+        }
+        FILE *dest_file = fopen(fullpath, "wb");
+        if (!dest_file) {
+            printf("Couldn't open file '%s' (Possibly no folder '%s')\n", fullpath, destination_folder);
+            write_to_log(fullpath, "ERROR: Couldn't open destination file");
+            fclose(src_file);
+            free(fullpath);
+            continue;
+        }
+        
+        process_file(src_file, dest_file, filename);
+        fclose(src_file);
+        fclose(dest_file);
+        free(fullpath);
+    }
+
+    return;
 }

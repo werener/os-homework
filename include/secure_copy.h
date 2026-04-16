@@ -14,7 +14,8 @@ typedef struct {
     char *dest_name;
     int total_sources;
     int sources_processed;
-} thread_args_t;
+} args_t;
 
 void *worker(void* arg);
 void process_file(FILE *src_file, FILE *dest_file, const char *filename);
+void sequential(args_t args);
