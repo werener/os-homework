@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
     }
 
     /* Argument parsing */
+
     int remaining_args = argc - optind;
     if (remaining_args < 3) {
         fprintf(stderr, "Usecase example: %s <FILE> [FILES...] <COPY_DIR> <KEY>\n", bin_title);
@@ -80,10 +81,7 @@ int main(int argc, char **argv) {
     }
 
     /* Start execution */
-    struct timespec start, end;
     double execution_time;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-
     // if (mode == MODE_AUTO)
     //     mode = num_sources <= 4 ? MODE_SEQUENTIAL : MODE_PARALLEL;
 
