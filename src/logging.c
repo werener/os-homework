@@ -1,11 +1,12 @@
 #include "logging.h"
 #include <sys/syscall.h>
+#include <pthread.h>
 #include <unistd.h>
 
 FILE *log_file = NULL;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void close_log() {
+void close_log(void) {
     if (log_file) {
         fclose(log_file);
         pthread_mutex_destroy(&log_mutex);

@@ -2,10 +2,8 @@
 #include "logging.h"
 #include "secure_copy.h"
 #include "string.h"
-#include <bits/getopt_core.h>
+
 #include <getopt.h>
-#include <stdio.h>
-#include <unistd.h>
 #include <signal.h>
 
 #define WORKER_COUNT 4
@@ -14,26 +12,22 @@
 #define MODE_SEQUENTIAL 0
 #define MODE_PARALLEL 1
 
-
-
-void segv_handler(int _) {
-    set_interruption(1);
-    fprintf(stderr, "Read of protected memory detected\n");
-    _exit(1);
-}
-
-double run_parallel(args_t args);
-double run_sequential(args_t args);
-void print_execution_time(double execution_time, args_t args);
+void segv_handler(int);
+void sigint_handler(int);
+double run_parallel(args_t);
+double run_sequential(args_t);
+void print_execution_time(double execution_time, args_t);
 
 int main(int argc, char **argv) {
     signal(SIGSEGV, segv_handler);
+    signal(SIGINT, sigint_handler);
+
     int EXIT_CODE = 0;
     const char *bin_title = argv[0];
-    int opt;
-    int option_index = 0;
 
     /* Option parsing */
+    int opt;
+    int option_index = 0;
     int mode = MODE_AUTO;
     static struct option long_options[] = {
         {"mode", optional_argument, 0, 'm'},
@@ -52,7 +46,7 @@ int main(int argc, char **argv) {
                 mode = MODE_PARALLEL;
                 break;
             }
-            fprintf(stderr, "No mod '%s' availiable\n", optarg);
+            fprintf(stderr, "No mode '%s' availiable\n", optarg);
             /* fallthrough */
         default:
             fprintf(stderr, "Usecase example: %s <FILE> [FILES...] <COPY_DIR> <KEY>\n", bin_title);
@@ -89,9 +83,10 @@ int main(int argc, char **argv) {
         goto CLEANUP;
 
     /* Setup logging */
-    log_file = fopen("log.log", "a");
+    const char *LOGFILE = "log.log";
+    log_file = fopen(LOGFILE, "a");
     if (!log_file) {
-        perror("Failed to create log.txt");
+        fprintf(stderr, "Failed to create %s", LOGFILE);
         goto CLEANUP;
     }
 
@@ -155,4 +150,18 @@ double run_sequential(args_t args) {
 void print_execution_time(double execution_time, args_t args) {
     printf("Execution time: %f seconds\n", execution_time);
     printf("Average time per file: %f seconds\n", execution_time / args.total_sources);
+}
+
+void segv_handler(int sig) {
+    INTERRUPTION = sig;
+    fprintf(stderr, "%d: Read of protected memory detected\n", sig);
+    log_custom_message("\tExited programm with segmentation fault\n\n");
+    _exit(sig);
+}
+
+void sigint_handler(int sig) {
+    INTERRUPTION = sig;
+    fprintf(stderr, "%d: Keyboard interruption\n", sig);
+    log_custom_message("\tProgram stopped via keyboard interruption\n\n");
+    _exit(sig);
 }

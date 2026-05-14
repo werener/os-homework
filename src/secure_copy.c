@@ -1,18 +1,17 @@
 #include "secure_copy.h"
 #include "caesar.h"
-
 #include "filepath.h"
 #include "logging.h"
+
 #include <asm-generic/errno.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 
 pthread_mutex_t counter_mutex = PTHREAD_MUTEX_INITIALIZER;
-volatile __sig_atomic_t is_interrupted = 0;
+volatile __sig_atomic_t INTERRUPTION = 0;
 
-void set_interruption(int new) {
-    is_interrupted = new;
-}
 
 void process_file(FILE *src_file, FILE *dest_file, const char *filename) {
     char *buffer = malloc(BUFFER_SIZE);
@@ -49,10 +48,6 @@ void process_file(FILE *src_file, FILE *dest_file, const char *filename) {
 void *worker(void *arg) {
     args_t *args = (args_t *)arg;
     while (true) {
-        if (is_interrupted) {
-            break;
-        }
-
         struct timespec timeout;
         clock_gettime(CLOCK_REALTIME, &timeout);
         timeout.tv_sec += DEADLOCK_DETECTION_TIMER_SEC;
@@ -105,6 +100,7 @@ void *worker(void *arg) {
         }
 
         process_file(src_file, dest_file, filename);
+        
         fclose(src_file);
         fclose(dest_file);
         free(fullpath);
@@ -116,7 +112,7 @@ void *worker(void *arg) {
 void sequential(args_t args) {
     while (args.sources_processed < args.total_sources) {
 
-        if (is_interrupted) {
+        if (INTERRUPTION) {
             break;
         }
         int currently_processing = args.sources_processed;

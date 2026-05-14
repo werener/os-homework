@@ -1,44 +1,44 @@
 #include "caesar.h"
-#include <pthread.h>
+#include <stdio.h>
+
 static char *KEY_PAGE = NULL;
 static size_t PAGE_SIZE = 0;
 
-size_t get_psize() {
+size_t get_psize(void) {
     return PAGE_SIZE;
 }
 
-char *get_page() {
+char *get_page(void) {
     return KEY_PAGE;
 }
 
-
-void free_page() {
+void free_page(void) {
     if (KEY_PAGE != NULL) {
         mprotect(KEY_PAGE, PAGE_SIZE, PROT_WRITE);
-        
         KEY_PAGE[0] = 0;
         munmap(KEY_PAGE, PAGE_SIZE);
         KEY_PAGE = NULL;
     }
 }
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+// #define SIMULATE_SEGFAULT yes
+
+pthread_mutex_t encryption_mutex = PTHREAD_MUTEX_INITIALIZER;
 void caesar(void *src_ptr, void *target_ptr, int len) {
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&encryption_mutex);
     #ifndef SIMULATE_SEGFAULT
     mprotect(get_page(), get_psize(), PROT_READ);
     #endif
-    
+
     char *src = (char *)src_ptr;
     char *target = (char *)target_ptr;
-    
     for (int i = 0; i < len; ++i) {
         char byte = src[i];
         target[i] = byte ^ KEY_PAGE[0];
     }
     
     mprotect(KEY_PAGE, PAGE_SIZE, PROT_NONE);
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&encryption_mutex);
 }
 
 int caesar_key(char key_) {

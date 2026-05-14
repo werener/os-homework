@@ -1,4 +1,8 @@
 #include "filepath.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 int is_directory(const char *path) {
     struct stat path_stat;
