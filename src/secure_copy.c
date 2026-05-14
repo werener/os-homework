@@ -5,10 +5,15 @@
 #include "logging.h"
 #include <asm-generic/errno.h>
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 
 pthread_mutex_t counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+volatile __sig_atomic_t is_interrupted = 0;
+
+void set_interruption(int new) {
+    is_interrupted = new;
+}
+
 void process_file(FILE *src_file, FILE *dest_file, const char *filename) {
     char *buffer = malloc(BUFFER_SIZE);
     if (!buffer) {
@@ -23,6 +28,7 @@ void process_file(FILE *src_file, FILE *dest_file, const char *filename) {
         write_to_log(filename, "ERROR: Memory allocation failed");
         return;
     }
+    
     write_to_log(filename, "Opened for read");
     while (true) {
         size_t bytes_read = fread(buffer, 1, BUFFER_SIZE, src_file);
@@ -42,8 +48,11 @@ void process_file(FILE *src_file, FILE *dest_file, const char *filename) {
 
 void *worker(void *arg) {
     args_t *args = (args_t *)arg;
-
     while (true) {
+        if (is_interrupted) {
+            break;
+        }
+
         struct timespec timeout;
         clock_gettime(CLOCK_REALTIME, &timeout);
         timeout.tv_sec += DEADLOCK_DETECTION_TIMER_SEC;
@@ -52,6 +61,7 @@ void *worker(void *arg) {
         if (lock_result == ETIMEDOUT) {
             fprintf(stderr, "Possible deadlock\n");
             write_to_log("-", "ERROR: Deadlock");
+            
             break;
         }
 
@@ -104,9 +114,11 @@ void *worker(void *arg) {
 }
 
 void sequential(args_t args) {
-
     while (args.sources_processed < args.total_sources) {
 
+        if (is_interrupted) {
+            break;
+        }
         int currently_processing = args.sources_processed;
         args.sources_processed++;
         char *filename = args.src_names[currently_processing];

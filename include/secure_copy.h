@@ -14,6 +14,10 @@ typedef struct {
     int sources_processed;
 } args_t;
 
+
+
+void set_interruption(int new);
+
 void *worker(void *arg);
 void process_file(FILE *src_file, FILE *dest_file, const char *filename);
 void sequential(args_t args);

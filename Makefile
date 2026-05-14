@@ -36,6 +36,12 @@ $(target_dir)/%.o: $(source_dir)/%.c
 run: $(target_dir)/$(target) 
 	./$(target_dir)/$(target) $(testset) ./$(data_dir)/out/ a
 
+runp: $(target_dir)/$(target) 
+	./$(target_dir)/$(target) -m=parallel $(testset) ./$(data_dir)/out/ a
+
+runs: $(target_dir)/$(target) 
+	./$(target_dir)/$(target) -m=sequential $(testset) ./$(data_dir)/out/ a
+
 showcase: $(target_dir)/$(target)
 	@echo -e ""
 	./$(target_dir)/$(target) $(testset) -m=sequential ./$(data_dir)/out/ a
