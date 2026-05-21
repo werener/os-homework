@@ -1,5 +1,6 @@
 #include "args.h"
 #include "caesar.h"
+#include "image.h"
 #include "logging.h"
 #include "secure_copy.h"
 #include "string.h"
@@ -25,6 +26,7 @@ int main(int argc, char **argv) {
     signal(SIGSEGV, segv_handler);
     signal(SIGINT, sigint_handler);
 
+    /* Parse CLI arguments */
     cli_args_t args = {
         .bin_title = argv[0],
         .key = NULL,
@@ -65,15 +67,18 @@ int main(int argc, char **argv) {
         }
     }
 
-    /* Argument parsing */
     args.command = get_command(argv[optind]);
     args.files_amount = argc - optind - 1;
     args.files = argv + optind + 1;
 
+    if (strcmp("dbg", argv[optind]) == 0) {
+        goto DEBUG;
+    }
+
     if (!validate_args(args)) {
         return EXIT_FAILURE;
     }
-    
+
     /* Setup logging */
     const char *LOGFILE = "log.log";
     log_file = fopen(LOGFILE, "a");
@@ -84,6 +89,12 @@ int main(int argc, char **argv) {
     }
 
     cleanup();
+
+DEBUG:
+    image_t *image= get_image(args.image);
+
+    for (int i = 0; i < image->files_amount; ++i)
+        print_file(image->files[i]);
     return EXIT_SUCCESS;
 }
 
