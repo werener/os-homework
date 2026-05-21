@@ -13,5 +13,5 @@ typedef struct {
 
 typedef struct {
     file_t *files;
-} container_t;
+} image_t;
 
