@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
         .key = NULL,
         .image = NULL,
         .out = NULL,
-        .command = NULL,
+        .command = CMD_NONE,
         .files = NULL,
     };
 
@@ -56,23 +56,22 @@ int main(int argc, char **argv) {
             break;
         case '?':
             help();
-            return 0;
+            return EXIT_SUCCESS;
         case 'h':
             help();
-            return 0;
+            return EXIT_SUCCESS;
         default:
-            return 1;
+            return EXIT_FAILURE;
         }
     }
 
     /* Argument parsing */
-    args.command = argv[optind];
+    args.command = get_command(argv[optind]);
     args.files_amount = argc - optind - 1;
     args.files = argv + optind + 1;
-    
-    int validation;
-    if (validation = validate_args(args)) {
-        return validation;
+
+    if (!validate_args(args)) {
+        return EXIT_FAILURE;
     }
     
     /* Setup logging */
@@ -81,11 +80,11 @@ int main(int argc, char **argv) {
     if (!log_file) {
         fprintf(stderr, "Failed to create %s", LOGFILE);
         cleanup();
-        return 1;
+        return EXIT_FAILURE;
     }
 
     cleanup();
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 void cleanup() {

@@ -1,11 +1,23 @@
 #pragma once
+#include <stdbool.h>
+
+typedef enum {
+    CMD_ADD,
+    CMD_LIST,
+    CMD_GET,
+    CMD_NONE,
+    CMD_UNKNOWN
+} Command;
+
+Command get_command(const char*);
+
 
 typedef struct {
     char *bin_title;
     char *key;
     char *image;
     char *out;
-    char *command;
+    Command command;
 
     int files_amount;
     char **files;
@@ -13,4 +25,4 @@ typedef struct {
 
 void help();
 
-int validate_args(cli_args_t);
+bool validate_args(const cli_args_t);
