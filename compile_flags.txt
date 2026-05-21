@@ -1,4 +1,4 @@
--Iinclude
+-Iinclude -Ilib
 -Wall
 -Wextra 
 -pedantic 

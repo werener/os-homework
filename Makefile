@@ -3,11 +3,12 @@ SHELL = /bin/bash
 CC = gcc
 
 header_dir = include
+lib_dir = lib
 target_dir = build
 source_dir = src
 data_dir = data
 
-FLAGS = -Wall -Wextra -pedantic -I$(header_dir)
+FLAGS = -Wall -Wextra -pedantic -I$(header_dir) -I$(lib_dir)
 
 target = secure_copy
 sources = queue.c caesar.c secure_copy.c main.c filepath.c logging.c
