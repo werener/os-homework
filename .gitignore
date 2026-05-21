@@ -2,6 +2,8 @@ data/output*
 data/out/*
 build/
 
+*.bin
+
 log.log
 compile_flags.txt
 
