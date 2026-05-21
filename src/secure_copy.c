@@ -8,7 +8,6 @@
 #include <stdlib.h>
 
 pthread_mutex_t counter_mutex = PTHREAD_MUTEX_INITIALIZER;
-volatile __sig_atomic_t INTERRUPTION = 0;
 
 void process_file(FILE *src_file, FILE *dest_file, const char *filename) {
 	char *buffer = malloc(BUFFER_SIZE);

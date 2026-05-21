@@ -93,15 +93,13 @@ void cleanup() {
 }
 
 void segv_handler(int sig) {
-    INTERRUPTION = sig;
     fprintf(stderr, "%d: Read of protected memory detected\n", sig);
     log_custom_message("\tExited programm with segmentation fault\n\n");
-    // cleanup();
+    cleanup();
     _exit(sig);
 }
 
 void sigint_handler(int sig) {
-    INTERRUPTION = sig;
     fprintf(stderr, "%d: Keyboard interruption\n", sig);
     log_custom_message("\tExited program with keyboard interruption\n\n");
     cleanup();
