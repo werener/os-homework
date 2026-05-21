@@ -5,151 +5,105 @@
 
 #include <asm-generic/errno.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
-
 
 pthread_mutex_t counter_mutex = PTHREAD_MUTEX_INITIALIZER;
 volatile __sig_atomic_t INTERRUPTION = 0;
 
-
 void process_file(FILE *src_file, FILE *dest_file, const char *filename) {
-    char *buffer = malloc(BUFFER_SIZE);
-    if (!buffer) {
-        perror("Failed to allocate memory");
-        write_to_log(filename, "ERROR: Memory allocation failed");
-        return;
-    }
-    char *processed = malloc(BUFFER_SIZE);
-    if (!processed) {
-        free(buffer);
-        perror("Failed to allocate memory");
-        write_to_log(filename, "ERROR: Memory allocation failed");
-        return;
-    }
-    
-    write_to_log(filename, "Opened for read");
-    while (true) {
-        size_t bytes_read = fread(buffer, 1, BUFFER_SIZE, src_file);
-        caesar(buffer, processed, BUFFER_SIZE);
-        size_t bytes_written = fwrite(processed, 1, bytes_read, dest_file);
+	char *buffer = malloc(BUFFER_SIZE);
+	if (!buffer) {
+		perror("Failed to allocate memory");
+		write_to_log(filename, "ERROR: Memory allocation failed");
+		return;
+	}
+	char *processed = malloc(BUFFER_SIZE);
+	if (!processed) {
+		free(buffer);
+		perror("Failed to allocate memory");
+		write_to_log(filename, "ERROR: Memory allocation failed");
+		return;
+	}
 
-        if (bytes_written != BUFFER_SIZE)
-            break;
-    }
+	write_to_log(filename, "Opened for read");
+	while (true) {
+		size_t bytes_read = fread(buffer, 1, BUFFER_SIZE, src_file);
+		caesar(buffer, processed, BUFFER_SIZE);
+		size_t bytes_written = fwrite(processed, 1, bytes_read, dest_file);
 
-    write_to_log(filename, "Finished processing");
+		if (bytes_written != BUFFER_SIZE)
+			break;
+	}
 
-    free(buffer);
-    free(processed);
-    return;
+	write_to_log(filename, "Finished processing");
+
+	free(buffer);
+	free(processed);
+	return;
 }
 
 void *worker(void *arg) {
-    args_t *args = (args_t *)arg;
-    while (true) {
-        struct timespec timeout;
-        clock_gettime(CLOCK_REALTIME, &timeout);
-        timeout.tv_sec += DEADLOCK_DETECTION_TIMER_SEC;
+	args_t *args = (args_t *)arg;
+	while (true) {
+		struct timespec timeout;
+		clock_gettime(CLOCK_REALTIME, &timeout);
+		timeout.tv_sec += DEADLOCK_DETECTION_TIMER_SEC;
 
-        int lock_result = pthread_mutex_timedlock(&counter_mutex, &timeout);
-        if (lock_result == ETIMEDOUT) {
-            fprintf(stderr, "Possible deadlock\n");
-            write_to_log("-", "ERROR: Deadlock");
-            
-            break;
-        }
+		int lock_result = pthread_mutex_timedlock(&counter_mutex, &timeout);
+		if (lock_result == ETIMEDOUT) {
+			fprintf(stderr, "Possible deadlock\n");
+			write_to_log("-", "ERROR: Deadlock");
 
-        if (args->sources_processed >= args->total_sources) {
-            pthread_mutex_unlock(&counter_mutex);
-            break;
-        }
+			break;
+		}
 
-        int currently_processing = args->sources_processed;
-        args->sources_processed++;
-        char *filename = args->src_names[currently_processing];
-        
+		if (args->sources_processed >= args->total_sources) {
+			pthread_mutex_unlock(&counter_mutex);
+			break;
+		}
 
-        if (is_directory(filename)) {
-            fprintf(stderr, "(%i/%i) '%s' is a folder. Can't process it\n", currently_processing, args->total_sources, filename);
-            pthread_mutex_unlock(&counter_mutex);
-            continue;
-        }
+		int currently_processing = args->sources_processed;
+		args->sources_processed++;
+		char *filename = args->src_names[currently_processing];
 
-        fprintf(stderr, "(%i/%i) Processing '%s'\n", currently_processing, args->total_sources, filename);
+		if (is_directory(filename)) {
+			fprintf(stderr, "(%i/%i) '%s' is a folder. Can't process it\n", currently_processing,
+					args->total_sources, filename);
+			pthread_mutex_unlock(&counter_mutex);
+			continue;
+		}
 
-        pthread_mutex_unlock(&counter_mutex); // Comment-out for deadlock
-        
-        char *destination_folder = args->dest_name;
-        char *fullpath = make_copy_target(filename, destination_folder);
+		fprintf(stderr, "(%i/%i) Processing '%s'\n", currently_processing, args->total_sources,
+				filename);
 
-        FILE *src_file = fopen(filename, "rb");
-        if (!src_file) {
-            fprintf(stderr, "Couldn't open file '%s'\n", filename);
-            write_to_log(filename, "ERROR: Couldn't open source file");
-            free(fullpath);
-            continue;
-        }
-        FILE *dest_file = fopen(fullpath, "wb");
-        if (!dest_file) {
-            fprintf(stderr, "Couldn't open file '%s' (Possibly no folder '%s')\n", fullpath, destination_folder);
-            write_to_log(fullpath, "ERROR: Couldn't open destination file");
-            fclose(src_file);
-            free(fullpath);
-            continue;
-        }
+		pthread_mutex_unlock(&counter_mutex); // Comment-out for deadlock
 
-        process_file(src_file, dest_file, filename);
-        
-        fclose(src_file);
-        fclose(dest_file);
-        free(fullpath);
-    }
+		char *destination_folder = args->dest_name;
+		char *fullpath = make_copy_target(filename, destination_folder);
 
-    return NULL;
-}
+		FILE *src_file = fopen(filename, "rb");
+		if (!src_file) {
+			fprintf(stderr, "Couldn't open file '%s'\n", filename);
+			write_to_log(filename, "ERROR: Couldn't open source file");
+			free(fullpath);
+			continue;
+		}
+		FILE *dest_file = fopen(fullpath, "wb");
+		if (!dest_file) {
+			fprintf(stderr, "Couldn't open file '%s' (Possibly no folder '%s')\n", fullpath,
+					destination_folder);
+			write_to_log(fullpath, "ERROR: Couldn't open destination file");
+			fclose(src_file);
+			free(fullpath);
+			continue;
+		}
 
-void sequential(args_t args) {
-    while (args.sources_processed < args.total_sources) {
+		process_file(src_file, dest_file, filename);
 
-        if (INTERRUPTION) {
-            break;
-        }
-        int currently_processing = args.sources_processed;
-        args.sources_processed++;
-        char *filename = args.src_names[currently_processing];
+		fclose(src_file);
+		fclose(dest_file);
+		free(fullpath);
+	}
 
-        if (is_directory(filename)) {
-            printf("(%i/%i) %s is a folder. Can't process it\n", currently_processing, args.total_sources, filename);
-            continue;
-        }
-
-        fprintf(stderr, "(%i/%i) Processing '%s'\n", currently_processing, args.total_sources, filename);
-
-        char *destination_folder = args.dest_name;
-        char *fullpath = make_copy_target(filename, destination_folder);
-
-        FILE *src_file = fopen(filename, "rb");
-        if (!src_file) {
-            fprintf(stderr, "Couldn't open file '%s'\n", filename);
-            write_to_log(filename, "ERROR: Couldn't open source file");
-            free(fullpath);
-            continue;
-        }
-        FILE *dest_file = fopen(fullpath, "wb");
-        if (!dest_file) {
-            printf("Couldn't open file '%s' (Possibly no folder '%s')\n", fullpath, destination_folder);
-            write_to_log(fullpath, "ERROR: Couldn't open destination file");
-            fclose(src_file);
-            free(fullpath);
-            continue;
-        }
-
-        process_file(src_file, dest_file, filename);
-        fclose(src_file);
-        fclose(dest_file);
-        free(fullpath);
-    }
-
-    return;
+	return NULL;
 }

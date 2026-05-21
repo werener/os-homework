@@ -1,8 +1,7 @@
 #pragma once
 
 #include <pthread.h>
-#include <unistd.h>
-#include <sys/mman.h>
+
 
 extern pthread_mutex_t encryption_mutex;
 

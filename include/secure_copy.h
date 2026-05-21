@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdio.h>
-#include <sys/time.h>
+
 
 #define DEADLOCK_DETECTION_TIMER_SEC 5
 #define BUFFER_SIZE 4096
