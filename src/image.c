@@ -1,6 +1,7 @@
 #include "image.h"
 
 #include <stdlib.h>
+#include <strings.h>
 
 const long metadata_size = 4 + 4 + SALT_SIZE;
 
@@ -25,6 +26,10 @@ int count_files(char *path) {
     int filecount = 0;
     file_t f;
     while (1) {
+        // Successfully read until the very end
+        if (ftell(img_f) == size) {
+            break;
+        }
         // Not enough metadata, though there should be
         if ((long)metadata_size + ftell(img_f) > size) {
             fclose(img_f);
@@ -42,10 +47,6 @@ int count_files(char *path) {
 
         filecount++;
         fseek(img_f, bytes_till_next_file, SEEK_CUR);
-        // Successfully read until the very end
-        if (ftell(img_f) == size) {
-            break;
-        }
     }
     fclose(img_f);
     return filecount;
@@ -54,7 +55,7 @@ int count_files(char *path) {
 image_t *get_image(char *path) {
     FILE *img_f = fopen(path, "rb");
     if (!img_f) {
-        fprintf(stderr, "Image file %s couldn't be opened\n", path);
+        printf("Cannot open file '%s' for read", path);
         return NULL;
     }
 
@@ -77,8 +78,6 @@ image_t *get_image(char *path) {
         fread(file->name, file->name_len, 1, img_f);
         fread(file->data, file->data_len, 1, img_f);
 
-        print_file(*file);
-
         i++;
     }
     image_t *final_image = malloc(sizeof(image_t));
@@ -87,4 +86,28 @@ image_t *get_image(char *path) {
 
     fclose(img_f);
     return final_image;
+}
+
+
+int compare_names(const void *ln, const void *rn) {
+    const file_t *lf = (const file_t *)ln;
+    const file_t *rf = (const file_t *)rn;
+    
+    if (lf->name == NULL && rf->name == NULL) return 0;
+    if (lf->name == NULL) return -1;
+    if (rf->name == NULL) return 1;
+    
+    return strcasecmp(lf->name, rf->name);
+}
+
+void sort_image(image_t *image) {
+    if (image->files == NULL) {
+        return;
+    }
+    qsort(
+        image->files,
+        image->files_amount,
+        sizeof(file_t),
+        compare_names
+    );
 }
