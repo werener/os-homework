@@ -1,6 +1,6 @@
 #include "args.h"
 #include "caesar.h"
-#include "image.h"
+#include "image_operations.h"
 #include "logging.h"
 #include "secure_copy.h"
 #include "string.h"
@@ -67,7 +67,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    args.command = get_command(argv[optind]);
+    if (argc - optind > 0) 
+        args.command = get_command(argv[optind]);
     args.files_amount = argc - optind - 1;
     args.files = argv + optind + 1;
 
@@ -80,21 +81,26 @@ int main(int argc, char **argv) {
     }
 
     /* Setup logging */
-    const char *LOGFILE = "log.log";
-    log_file = fopen(LOGFILE, "a");
-    if (!log_file) {
-        fprintf(stderr, "Failed to create %s", LOGFILE);
-        cleanup();
-        return EXIT_FAILURE;
-    }
+    // const char *LOGFILE = "log.log";
+    // log_file = fopen(LOGFILE, "a");
+    // if (!log_file) {
+    //     fprintf(stderr, "Failed to create %s", LOGFILE);
+    //     cleanup();
+    //     return EXIT_FAILURE;
+    // }
 
-    cleanup();
+    
 
 DEBUG:
-    image_t *image= get_image(args.image);
+    // image_t *image= get_image(args.image);
 
-    for (int i = 0; i < image->files_amount; ++i)
-        print_file(image->files[i]);
+    // if (image == NULL) {
+    //     return EXIT_FAILURE;
+    // }
+    // for (int i = 0; i < image->files_amount; ++i)
+    //     print_file(image->files[i]);
+    list(args.image);
+    cleanup();
     return EXIT_SUCCESS;
 }
 

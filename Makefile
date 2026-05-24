@@ -11,7 +11,7 @@ data_dir = data
 FLAGS = -Wall -Wextra -pedantic -I$(header_dir) -I$(lib_dir)
 
 target = secure_copy
-sources = queue.c caesar.c secure_copy.c main.c filepath.c logging.c args.c image.c
+sources = queue.c caesar.c secure_copy.c main.c filepath.c logging.c args.c image.c image_operations.c
 objects = $(addprefix $(target_dir)/, $(sources:.c=.o))
 	
 testset = $(shell echo ./$(data_dir)/f{1..8}.txt)
@@ -33,18 +33,3 @@ $(target_dir)/$(target): $(objects)
 $(target_dir)/%.o: $(source_dir)/%.c
 	@mkdir -p $(@D)
 	$(CC) $(FLAGS) -I$(header_dir) -c $< -o $@
-
-run: $(target_dir)/$(target) 
-	./$(target_dir)/$(target) $(testset) ./$(data_dir)/out/ a
-
-runp: $(target_dir)/$(target) 
-	./$(target_dir)/$(target) -m=parallel $(testset) ./$(data_dir)/out/ a
-
-runs: $(target_dir)/$(target) 
-	./$(target_dir)/$(target) -m=sequential $(testset) ./$(data_dir)/out/ a
-
-showcase: $(target_dir)/$(target)
-	@echo -e ""
-	./$(target_dir)/$(target) $(testset) -m=sequential ./$(data_dir)/out/ a
-	@echo -e ""
-	./$(target_dir)/$(target) $(testset) -m=parallel ./$(data_dir)/out/ a
