@@ -5,7 +5,7 @@
 
 const long METADATA_SIZE = sizeof(int32_t) + sizeof(int32_t) + SALT_SIZE;
 
-void print_file(file_t file) {
+void print_file(const file_t file) {
     printf("%ld\n", METADATA_SIZE);
     printf("Salt (%d): ", SALT_SIZE);
     for (int i = 0; i < SALT_SIZE; ++i) {
@@ -15,7 +15,7 @@ void print_file(file_t file) {
     printf("Data (%d): %s\n\n", file.data_len, file.data);
 }
 
-int count_files(char *path) {
+int count_files(const char *path) {
     FILE *img_f = fopen(path, "rb");
     if (!img_f) {
         fprintf(stderr, "Image file %s couldn't be opened\n", path);
@@ -55,7 +55,7 @@ int count_files(char *path) {
     return filecount;
 }
 
-image_t *get_image(char *path) {
+image_t *get_image(const char *path) {
     FILE *img_f = fopen(path, "rb");
     if (!img_f) {
         printf("Cannot open file '%s' for read", path);
@@ -116,7 +116,7 @@ void sort_image(image_t *image) {
         compare_names);
 }
 
-file_t *get_by_name(image_t *image, char *name) {
+file_t *get_by_name(const image_t *image, const char *name) {
     int name_len = strlen(name);
     for (int i = 0; i < image->files_amount; ++i) {
         file_t *file = &image->files[i];

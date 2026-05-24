@@ -1,6 +1,6 @@
 #include "image_operations.h"
 
-void list(char *img_path) {
+void list(const char *img_path) {
 
     FILE *img_f = fopen(img_path, "rb");
     if (!img_f) {
@@ -25,7 +25,7 @@ void list(char *img_path) {
     fclose(img_f);
 }
 
-void get(char *img_path, char *key, char *src_file, char *result_path) {
+void get(const char *img_path, char *key, const char *src_file, const char *result_path) {
     FILE *img_f = fopen(img_path, "rb");
     if (!img_f) {
         fprintf(stderr, "Image file %s doesn't exist", img_path);

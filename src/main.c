@@ -1,6 +1,5 @@
 #include "args.h"
 #include "caesar.h"
-#include "image_operations.h"
 #include "logging.h"
 #include "secure_copy.h"
 #include "string.h"
@@ -67,17 +66,13 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (argc - optind > 0) 
+    if (argc - optind > 0)
         args.command = get_command(argv[optind]);
     args.files_amount = argc - optind - 1;
     args.files = argv + optind + 1;
 
     if (strcmp("dbg", argv[optind]) == 0) {
         goto DEBUG;
-    }
-
-    if (!validate_args(args)) {
-        return EXIT_FAILURE;
     }
 
     /* Setup logging */
@@ -89,10 +84,10 @@ int main(int argc, char **argv) {
     //     return EXIT_FAILURE;
     // }
 
-    
+    run(args);
 
 DEBUG:
-    image_t *image= get_image(args.image);
+    image_t *image = get_image(args.image);
 
     if (image == NULL) {
         return EXIT_FAILURE;
