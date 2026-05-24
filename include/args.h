@@ -1,4 +1,6 @@
 #pragma once
+
+#include "image_operations.h"
 #include <stdbool.h>
 
 typedef enum {
@@ -9,8 +11,7 @@ typedef enum {
     CMD_UNKNOWN
 } Command;
 
-Command get_command(const char*);
-
+Command get_command(const char *);
 
 typedef struct {
     char *bin_title;
@@ -26,3 +27,5 @@ typedef struct {
 void help();
 
 bool validate_args(const cli_args_t);
+
+int run(const cli_args_t);

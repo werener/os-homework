@@ -1,6 +1,7 @@
 #include "args.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 Command get_command(const char *repr) {
@@ -107,4 +108,26 @@ bool validate_args(const cli_args_t args) {
         perror("Something went incredibly wrong");
         return false;
     }
+}
+
+int run(const cli_args_t args) {
+    if (!validate_args(args))
+        return EXIT_FAILURE;
+
+    switch (args.command) {
+    case CMD_ADD:
+        // TODO
+        break;
+    case CMD_GET:
+        get(args.image, args.key, args.files[0], args.out);
+        break;
+    case CMD_LIST:
+        list(args.image);
+        break;
+    default:
+        fprintf(stderr, "Something went terribly wrong!\n");
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
