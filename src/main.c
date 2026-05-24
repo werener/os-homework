@@ -92,14 +92,14 @@ int main(int argc, char **argv) {
     
 
 DEBUG:
-    // image_t *image= get_image(args.image);
+    image_t *image= get_image(args.image);
 
-    // if (image == NULL) {
-    //     return EXIT_FAILURE;
-    // }
-    // for (int i = 0; i < image->files_amount; ++i)
-    //     print_file(image->files[i]);
-    list(args.image);
+    if (image == NULL) {
+        return EXIT_FAILURE;
+    }
+    for (int i = 0; i < image->files_amount; ++i)
+        print_file(image->files[i]);
+    // list(args.image);
     cleanup();
     return EXIT_SUCCESS;
 }

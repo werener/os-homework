@@ -25,3 +25,4 @@ image_t *get_image(char *path);
 
 void sort_image(image_t *image);
 
+file_t *get_by_name(image_t *image, char *name);

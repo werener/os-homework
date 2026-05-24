@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <strings.h>
 
-
 const long METADATA_SIZE = sizeof(int32_t) + sizeof(int32_t) + SALT_SIZE;
 
 void print_file(file_t file) {
@@ -92,15 +91,17 @@ image_t *get_image(char *path) {
     return final_image;
 }
 
-
 int compare_names(const void *ln, const void *rn) {
     const file_t *lf = (const file_t *)ln;
     const file_t *rf = (const file_t *)rn;
-    
-    if (lf->name == NULL && rf->name == NULL) return 0;
-    if (lf->name == NULL) return -1;
-    if (rf->name == NULL) return 1;
-    
+
+    if (lf->name == NULL && rf->name == NULL)
+        return 0;
+    if (lf->name == NULL)
+        return -1;
+    if (rf->name == NULL)
+        return 1;
+
     return strcasecmp(lf->name, rf->name);
 }
 
@@ -112,6 +113,15 @@ void sort_image(image_t *image) {
         image->files,
         image->files_amount,
         sizeof(file_t),
-        compare_names
-    );
+        compare_names);
+}
+
+file_t *get_by_name(image_t *image, char *name) {
+    int name_len = strlen(name);
+    for (int i = 0; i < image->files_amount; ++i) {
+        file_t *file = &image->files[i];
+        if ((file->name_len == name_len) && (strcasecmp(file->name, name) == 0))
+            return file;
+    }
+    return NULL;
 }
