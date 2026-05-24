@@ -3,12 +3,16 @@
 #include <stdlib.h>
 #include <strings.h>
 
-const long metadata_size = 4 + 4 + SALT_SIZE;
+
+const long METADATA_SIZE = sizeof(int32_t) + sizeof(int32_t) + SALT_SIZE;
 
 void print_file(file_t file) {
-    printf("%ld\n", metadata_size);
-    printf("Salt: %s\n", file.salt);
-    printf("Name (%d): %s\n", file.name_len, file.name);
+    printf("%ld\n", METADATA_SIZE);
+    printf("Salt (%d): ", SALT_SIZE);
+    for (int i = 0; i < SALT_SIZE; ++i) {
+        printf("%02x ", file.salt[i]);
+    }
+    printf("\nName (%d): %s\n", file.name_len, file.name);
     printf("Data (%d): %s\n\n", file.data_len, file.data);
 }
 
@@ -31,12 +35,12 @@ int count_files(char *path) {
             break;
         }
         // Not enough metadata, though there should be
-        if ((long)metadata_size + ftell(img_f) > size) {
+        if (METADATA_SIZE + ftell(img_f) > size) {
             fclose(img_f);
             return IMAGE_ERROR;
         }
 
-        fread(&f, metadata_size, 1, img_f);
+        fread(&f, METADATA_SIZE, 1, img_f);
         int bytes_till_next_file = f.data_len + f.name_len;
 
         // Metadata is incorrect
@@ -71,7 +75,7 @@ image_t *get_image(char *path) {
     file_t *files = malloc(sizeof(file_t) * amount_of_files);
     while (i < amount_of_files) {
         file_t *file = &files[i];
-        fread(file, metadata_size, 1, img_f);
+        fread(file, METADATA_SIZE, 1, img_f);
 
         file->name = malloc(file->name_len);
         file->data = malloc(file->data_len);

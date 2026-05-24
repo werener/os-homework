@@ -6,13 +6,12 @@
 #define SALT_SIZE 16
 #define IMAGE_ERROR -1
 
-
 typedef struct __attribute__((packed)) {
+    int32_t data_len;     // 4
+    int32_t name_len;     // 4
     char salt[SALT_SIZE]; // 16
     char *name;           // 8
     char *data;           // 8
-    int32_t data_len;     // 4
-    int32_t name_len;     // 4
 } file_t;                 // 40
 
 typedef struct __attribute__((packed)) {
