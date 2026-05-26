@@ -11,7 +11,7 @@ data_dir = data
 FLAGS = -Wall -Wextra -pedantic -I$(header_dir) -I$(lib_dir)
 
 target = secure_copy
-sources = queue.c caesar.c secure_copy.c main.c filepath.c logging.c args.c image.c image_operations.c
+sources = queue.c caesar.c secure_copy.c main.c filepath.c logging.c args.c image.c image_operations.c rc4.c
 objects = $(addprefix $(target_dir)/, $(sources:.c=.o))
 	
 testset = $(shell echo ./$(data_dir)/f{1..8}.txt)
