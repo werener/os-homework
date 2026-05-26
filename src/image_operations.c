@@ -1,6 +1,7 @@
 #include "image_operations.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 
 int compare_names(const void *ln, const void *rn) {
@@ -18,6 +19,10 @@ void list(const char *img_path) {
 		return;
 	}
 
+	if (file_count == 0) {
+		fprintf(stderr, "Empty image\n");
+		return;
+	}
 	FILE *img_f = fopen(img_path, "rb");
 	char **filenames = malloc(file_count * sizeof(char *));
 	metadata_t metadata;
@@ -25,7 +30,7 @@ void list(const char *img_path) {
 		// read metadata of the file
 		fread(&metadata, sizeof(metadata_t), 1, img_f);
 		// save its name
-        filenames[i] = malloc(metadata.name_len + 1);
+		filenames[i] = malloc(metadata.name_len + 1);
 		fread(filenames[i], metadata.name_len, 1, img_f);
 		// go to the next metadata block
 		fseek(img_f, metadata.data_len, SEEK_CUR);
@@ -34,7 +39,8 @@ void list(const char *img_path) {
 	qsort(filenames, file_count, sizeof(sizeof(char *)), compare_names);
 
 	for (int i = 0; i < file_count; ++i) {
-		printf("- %s\n", filenames[i]);
+		if (strcmp(filenames[i], "\0"))
+			printf("- %s\n", filenames[i]);
 	}
 }
 
