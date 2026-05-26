@@ -1,5 +1,6 @@
 #pragma once
 
+#include "rc4.h"
 #include <stdint.h>
 #include <stdio.h>
 

@@ -82,12 +82,12 @@ int main(int argc, char **argv) {
 	//     return EXIT_FAILURE;
 	// }
 
-	// run(args);
+	run(args);
 
-	unsigned char *a = malloc(12);
-	memcpy(a, &"aaaaaaaaaaaa", 12);
+	// char *a = malloc(13);
+	// memcpy(a, &"aaaaaaaaaaaa\0", 13);
 
-    test(args.key,a, 12);
+    // test(args.key, a, 13);
 
 	cleanup();
 	return EXIT_SUCCESS;

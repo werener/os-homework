@@ -28,8 +28,10 @@ clean:
 
 $(target_dir)/$(target): $(objects)
 	@mkdir -p $(@D)
-	$(CC) $(FLAGS) $^ -o $@
+	@$(CC) $(FLAGS) $^ -o $@
+	@echo -e "\nFinished!"
 
 $(target_dir)/%.o: $(source_dir)/%.c
 	@mkdir -p $(@D)
-	$(CC) $(FLAGS) -I$(header_dir) -c $< -o $@
+	@echo -n "$@+  "
+	@$(CC) $(FLAGS) -I$(header_dir) -c $< -o $@

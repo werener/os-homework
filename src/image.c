@@ -26,6 +26,7 @@ int count_files(const char *path) {
 		// Metadata is incorrect
 		if (ftell(img_f) + bytes_till_next_file > size) {
 			fclose(img_f);
+            fprintf(stderr, "Wrong file format: %s\n", path);
 			return IMAGE_ERROR;
 		}
 
