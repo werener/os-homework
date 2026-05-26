@@ -119,7 +119,8 @@ int run(const cli_args_t args) {
         // TODO
         break;
     case CMD_GET:
-        get(args.image, args.key, args.files[0], args.out);
+        // TODO
+        // get(args.image, args.key, args.files[0], args.out);
         break;
     case CMD_LIST:
         list(args.image);

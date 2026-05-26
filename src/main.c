@@ -71,9 +71,6 @@ int main(int argc, char **argv) {
     args.files_amount = argc - optind - 1;
     args.files = argv + optind + 1;
 
-    if (strcmp("dbg", argv[optind]) == 0) {
-        goto DEBUG;
-    }
 
     /* Setup logging */
     // const char *LOGFILE = "log.log";
@@ -86,15 +83,6 @@ int main(int argc, char **argv) {
 
     run(args);
 
-DEBUG:
-    image_t *image = get_image(args.image);
-
-    if (image == NULL) {
-        return EXIT_FAILURE;
-    }
-    for (int i = 0; i < image->files_amount; ++i)
-        print_file(image->files[i]);
-    // list(args.image);
     cleanup();
     return EXIT_SUCCESS;
 }
