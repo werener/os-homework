@@ -45,6 +45,15 @@ void list(const char *img_path) {
 	fclose(img_f);
 }
 
+byte *add_salt(char salt[SALT_SIZE], byte *key) {
+	int key_len = strlen((char *)key);
+	byte *full_key = malloc(SALT_SIZE + key_len + 1);
+	memcpy(full_key, salt, SALT_SIZE);
+	memcpy(full_key + SALT_SIZE, key, key_len + 1);
+
+	return full_key;
+}
+
 void get(const char *img_path, byte *key, const char *name_searched, const char *out) {
 	// also includes validation
 	int file_count = count_files(img_path);
@@ -59,7 +68,6 @@ void get(const char *img_path, byte *key, const char *name_searched, const char 
 
 	FILE *img_f = fopen(img_path, "rb");
 	metadata_t metadata;
-	int key_len = strlen((char *)key);
 	for (int i = 0; i < file_count; ++i) {
 		// read metadata of the file
 		fread(&metadata, sizeof(metadata_t), 1, img_f);
@@ -78,9 +86,7 @@ void get(const char *img_path, byte *key, const char *name_searched, const char 
 			}
 			
 			// concatenate salt and the provided [key]
-			byte *full_key = malloc(SALT_SIZE + key_len + 1);
-			memcpy(full_key, metadata.salt, SALT_SIZE);
-			memcpy(full_key + SALT_SIZE, key, key_len + 1);
+			byte *full_key = add_salt(metadata.salt, key);
 
 			
 			state_t *state = rc4_init(full_key);
