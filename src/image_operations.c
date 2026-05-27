@@ -88,10 +88,17 @@ int get(const char *img_path, byte *key, const char *name_searched, const char *
         // read metadata of the file
         fread(&metadata, sizeof(metadata_t), 1, img_f);
 
+        
+        // if the name is too large, show only first 60 bytes and show '...'
+        int32_t allowed_size = metadata.name_len > MAX_ALLOWED_FILENAME
+                                   ? MAX_ALLOWED_FILENAME
+                                   : metadata.name_len;
+
+        char *name_cur = malloc(allowed_size + 1);
+        fread(name_cur, allowed_size, 1, img_f);
+        
         // check if the name matches
-        char *name_cur = malloc(metadata.name_len + 1);
-        fread(name_cur, metadata.name_len, 1, img_f);
-        if (strcasecmp(name_cur, name_searched) == 0) {
+        if (strncasecmp(name_cur, name_searched, allowed_size) == 0) {
 
             // try opening [out]
             FILE *out_f = fopen(out, "wb");
