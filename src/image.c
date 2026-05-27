@@ -91,7 +91,7 @@ void *add_worker(void *arg) {
             fprintf(stderr, "Couldn't open %s\n", cur_name);
             continue;
         }
-
+  
         metadata_t metadata;
         // get data len
         fseek(cur_f, 0, SEEK_END);
@@ -102,22 +102,26 @@ void *add_worker(void *arg) {
         metadata.name_len = strlen(cur_name);
 
         // get random salt
-        FILE *urandom = fopen("/dev/urandom", "rb");
-        fread(metadata.salt, 1, SALT_SIZE, urandom);
-        fclose(urandom);
+        for (int i = 0; i < 16; ++i) {
+            metadata.salt[i] = (byte)(rand() & 0xFF);
+        }
+        // FILE *urandom = fopen("/dev/urandom", "rb");
+        // fread(metadata.salt, SALT_SIZE, 1, urandom);
+        // fclose(urandom);
 
         // prepare to write into image
+        write_to_log(cur_name, "In process");
+
         byte *full_key = add_salt(metadata.salt, args->key, args->len_key);
         state_t *state = rc4_init(full_key, args->len_key + SALT_SIZE);
         size_t bytes_remained = metadata.data_len;
         byte *buffer = malloc(BUFFER_SIZE);
 
-		write_to_log(cur_name, "In process");
         // start writing current file into image
         pthread_mutex_lock(&image_mx);
 
-		fwrite(&metadata, 1, sizeof(metadata_t), args->img_f);
-		fwrite(cur_name, 1, metadata.name_len, args->img_f);
+		fwrite(&metadata,  1,sizeof(metadata_t), args->img_f);
+		fwrite(cur_name, 1,metadata.name_len,   args->img_f);
         while (bytes_remained > 0) {
             size_t chunk_size = bytes_remained >= BUFFER_SIZE
                                     ? BUFFER_SIZE
@@ -126,12 +130,12 @@ void *add_worker(void *arg) {
             bytes_remained -= fread(buffer, 1, chunk_size, cur_f);
 
             rc4_apply(state, buffer, chunk_size);
-            fwrite(buffer, 1, chunk_size, args->img_f);
+            fwrite(buffer,  1, chunk_size, args->img_f);
         }
 
         pthread_mutex_unlock(&image_mx);
+
 		write_to_log(cur_name, "Finished");
-		
         fclose(cur_f);
         free_state(state);
         free(full_key);

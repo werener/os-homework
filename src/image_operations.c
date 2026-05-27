@@ -8,11 +8,15 @@
 
 #define WORKER_COUNT 4
 
-int compare_names(const void *ln, const void *rn) {
-    const char *const *ls = (const char *const *)ln;
-    const char *const *rs = (const char *const *)rn;
+typedef struct {
+    char *name;
+    int32_t data_len;
+} file_entry_t;
 
-    return strcasecmp(*ls, *rs);
+int compare_entries(const void *a, const void *b) {
+    const file_entry_t *fa = (const file_entry_t *)a;
+    const file_entry_t *fb = (const file_entry_t *)b;
+    return strcmp(fa->name, fb->name);
 }
 
 int list(const char *img_path) {
@@ -29,24 +33,26 @@ int list(const char *img_path) {
     }
 
     FILE *img_f = fopen(img_path, "rb");
-    char *filenames[file_count];
+    file_entry_t entries[file_count];
     metadata_t metadata;
     for (int i = 0; i < file_count; ++i) {
         // read metadata of the file
         fread(&metadata, sizeof(metadata_t), 1, img_f);
-        // save its name
-        filenames[i] = malloc(metadata.name_len + 1);
-        fread(filenames[i], metadata.name_len, 1, img_f);
+        // save its namez
+        entries[i].data_len = metadata.data_len;
+        entries[i].name = malloc(metadata.name_len + 1);
+        fread(entries[i].name, metadata.name_len, 1, img_f);
         // go to the next metadata block
         fseek(img_f, metadata.data_len, SEEK_CUR);
     }
-    
-    qsort(filenames, file_count, sizeof(sizeof(char *)), compare_names);
 
+    qsort(entries, file_count, sizeof(file_entry_t), compare_entries);
+
+    printf("Image contains %d files\n", file_count);
     for (int i = 0; i < file_count; ++i) {
-        if (strcmp(filenames[i], "\0"))
-            printf("- %s\n", filenames[i]);
-        free(filenames[i]);
+        file_entry_t entry = entries[i];
+        printf("- '%s' (%d Bytes)\n", entry.name, entry.data_len);
+        free(entry.name);
     }
     fclose(img_f);
 
@@ -120,7 +126,14 @@ int get(const char *img_path, byte *key, const char *name_searched, const char *
 }
 
 int add(const char *img_path, byte *key, char **files, int file_amount) {
-    fprintf(log_file, "\nAdding files (%d) to '%s'\n", file_amount, img_path);
+    add_args_t args = {
+        .files = unwind_folders(files, file_amount),
+        .processed = 0,
+        .key = key,
+        .len_key = strlen((char *)key),
+        .img_f = NULL,
+    };
+    fprintf(log_file, "\nAdding files (%ld) to '%s'\n", args.files->count, img_path);
 
     FILE *img_f = fopen(img_path, "a");
     if (!img_f) {
@@ -133,22 +146,9 @@ int add(const char *img_path, byte *key, char **files, int file_amount) {
     }
     fclose(img_f);
     img_f = fopen(img_path, "a");
+    args.img_f = img_f;
 
-    FILE *urandom = fopen("/dev/urandom", "rb");
-    if (!urandom) {
-        fprintf(stderr, "Cannot open '/dev/urandom'\n");
-        return EXIT_FAILURE;
-    }
-    fclose(urandom);
-
-    add_args_t args = {
-        .files = unwind_folders(files, file_amount),
-        .processed = 0,
-        .key = key,
-        .len_key = strlen((char *)key),
-        .img_f = img_f,
-    };
-
+    srand(time(NULL));
     pthread_t pool[WORKER_COUNT];
     for (int i = 0; i < WORKER_COUNT; ++i) {
         pthread_create(&pool[i], NULL, add_worker, &args);

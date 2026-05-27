@@ -25,9 +25,10 @@ void collect_file(array_t *arr, char *path) {
 
     // easy-handled cases
     if (S_ISREG(st.st_mode)) {
-		normalize_path(path);
+
+        normalize_path(path);
         array_push(arr, path);
-		return;
+        return;
     }
     if (!S_ISDIR(st.st_mode)) {
         fprintf(stderr, "'%s' is neither a folder, nor a regular file. Cannot process it\n", path);
@@ -50,27 +51,39 @@ void collect_file(array_t *arr, char *path) {
 
         // "path" + '/' + "entry" + '\0'
         size_t full_len = strlen(path) + 1 + strlen(entry->d_name) + 1;
+        if (strcmp(path, "./") == 0) {
+            full_len -= strlen(path) + 1;
+        }
         char *full_path = malloc(full_len);
-        snprintf(full_path, full_len, "%s/%s", path, entry->d_name);
+        if (strcmp(path, "./") == 0) 
+            snprintf(full_path, full_len, "%s", entry->d_name);
+        else
+            snprintf(full_path, full_len, "%s/%s", path, entry->d_name);
 
         // recursively descent down into folder structure
-		normalize_path(full_path);
+        normalize_path(full_path);
         collect_file(arr, full_path);
-		free(full_path);
+        free(full_path);
     }
     closedir(dir);
 }
 
 void normalize_path(char *path) {
     size_t len = strlen(path);
-
+    if (len == 0)
+        return;
     char *result = malloc(len + 1);
 
     size_t j = 0;
     int prev_was_slash = 0;
 
+    size_t skip_size = 0;
+    // skip ./ in entries that have one
+    if ((path[0] == '.') && (path[1] == '/')) {
+        skip_size = 2;
+    }
     // add slash only if it isn't a duplicate
-    for (size_t i = 0; i < len; i++) {
+    for (size_t i = 0 + skip_size; i < len; i++) {
         if (path[i] == '/') {
             if (!prev_was_slash) {
                 result[j++] = '/';
@@ -89,6 +102,6 @@ void normalize_path(char *path) {
 
     result[j] = '\0';
 
-	memcpy(path, result, len);
-	free(result);
+    memcpy(path, result, len);
+    free(result);
 }
