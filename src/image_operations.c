@@ -52,6 +52,8 @@ int list(const char *img_path) {
             for (int j = 0; j < 3; ++j)
                 entries[j].name[MAX_ALLOWED_FILENAME - i - 1] = '.';
         }
+        fseek(img_f, metadata.name_len - allowed_size, SEEK_CUR);
+    
         // go to the next metadata block
         fseek(img_f, metadata.data_len, SEEK_CUR);
     }
@@ -96,7 +98,7 @@ int get(const char *img_path, byte *key, const char *name_searched, const char *
 
         char *name_cur = malloc(allowed_size + 1);
         fread(name_cur, allowed_size, 1, img_f);
-        
+        fseek(img_f, metadata.name_len - allowed_size, SEEK_CUR);
         // check if the name matches
         if (strncasecmp(name_cur, name_searched, allowed_size) == 0) {
 
