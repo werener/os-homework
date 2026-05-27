@@ -14,23 +14,22 @@ int count_files(const char *path) {
     }
 
     fseek(img_f, 0, SEEK_END);
-    long size = ftell(img_f);
+    uint64_t size = ftell(img_f);
     rewind(img_f);
-
     int filecount = 0;
     metadata_t metadata;
-    while (ftell(img_f) != size) {
+    while ((uint64_t)ftell(img_f) != size) {
+        
         // Not enough metadata, though there should be
-        if ((long)sizeof(metadata_t) + ftell(img_f) > size) {
+        if ((size_t)sizeof(metadata_t) + ftell(img_f) > size) {
             fclose(img_f);
             fprintf(stderr, "Wrong file format: '%s'\n", path);
             return IMAGE_ERROR;
         }
-
-        fread(&metadata, sizeof(metadata_t), 1, img_f);
-        int bytes_till_next_file = metadata.data_len + metadata.name_len;
+        fread(&metadata, 1, sizeof(metadata_t), img_f);
+        uint64_t bytes_till_next_file = (uint64_t)metadata.data_len + (uint64_t)metadata.name_len;
         // Metadata is incorrect
-        if (ftell(img_f) + bytes_till_next_file > size) {
+        if ((size_t)ftell(img_f) + bytes_till_next_file > size ) {
             fclose(img_f);
             fprintf(stderr, "Wrong file format: '%s'\n", path);
             return IMAGE_ERROR;

@@ -6,12 +6,12 @@
 #include <string.h>
 #include <strings.h>
 
-#define MAX_ALLOWED_FILENAME ((int32_t)63)
+#define MAX_ALLOWED_FILENAME ((uint32_t)63)
 #define WORKER_COUNT 4
 
 typedef struct {
     char *name;
-    int32_t data_len;
+    uint32_t data_len;
 } file_entry_t;
 
 int compare_entries(const void *a, const void *b) {
@@ -41,19 +41,18 @@ int list(const char *img_path) {
         fread(&metadata, sizeof(metadata_t), 1, img_f);
         // save its name
         entries[i].data_len = metadata.data_len;
-
         // if the name is too large, show only first 60 bytes and show '...'
-        int32_t allowed_size = metadata.name_len > MAX_ALLOWED_FILENAME
+        uint32_t allowed_size = metadata.name_len > MAX_ALLOWED_FILENAME
                                    ? MAX_ALLOWED_FILENAME
                                    : metadata.name_len;
         entries[i].name = malloc(allowed_size + 1);
         fread(entries[i].name, allowed_size, 1, img_f);
         if (allowed_size == MAX_ALLOWED_FILENAME) {
             for (int j = 0; j < 3; ++j)
-                entries[j].name[MAX_ALLOWED_FILENAME - i - 1] = '.';
+                entries[i].name[allowed_size - j - 1] = '.';
         }
         fseek(img_f, metadata.name_len - allowed_size, SEEK_CUR);
-    
+        
         // go to the next metadata block
         fseek(img_f, metadata.data_len, SEEK_CUR);
     }
@@ -63,7 +62,7 @@ int list(const char *img_path) {
     printf("Image contains %d files\n", file_count);
     for (int i = 0; i < file_count; ++i) {
         file_entry_t entry = entries[i];
-        printf("- '%s' (%d Bytes)\n", entry.name, entry.data_len);
+        printf("- '%s' (%u Bytes)\n", entry.name, entry.data_len);
         free(entry.name);
     }
     fclose(img_f);
@@ -97,10 +96,11 @@ int get(const char *img_path, byte *key, const char *name_searched, const char *
                                    : metadata.name_len;
 
         char *name_cur = malloc(allowed_size + 1);
+        
         fread(name_cur, allowed_size, 1, img_f);
         fseek(img_f, metadata.name_len - allowed_size, SEEK_CUR);
         // check if the name matches
-        if (strncasecmp(name_cur, name_searched, allowed_size) == 0) {
+        if (strcasecmp(name_cur, name_searched) == 0) {
 
             // try opening [out]
             FILE *out_f = fopen(out, "wb");
