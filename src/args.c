@@ -29,7 +29,7 @@ void help_list() {
 		   "\tRequires: path to image\n");
 }
 void help_get() {
-	printf("\nget\tDecrypts [FILE], using the provided [KEY] and writes it to "
+	printf("\nget\tDecrypts [FILE] from the [IMAGE], using the provided [KEY] and writes it to "
 		   "[OUT]\n"
 		   "\tUsage: get --key=[KEY] --image=[IMAGE] --out=[OUT] [FILE]\n"
 		   "\tRequires: key, path to image, path to the output file and "
@@ -100,7 +100,7 @@ bool validate_args(const cli_args_t args) {
 			return false;
 		}
 		if (args.files_amount != 1) {
-			fprintf(stderr, "More than one file provided\n");
+			fprintf(stderr, "Not exactly one file provided\n");
 			help_get();
 			return false;
 		}

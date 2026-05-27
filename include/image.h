@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define SALT_SIZE 4
+#define SALT_SIZE 16
 #define IMAGE_ERROR -1
 
 typedef struct __attribute__((packed)) {

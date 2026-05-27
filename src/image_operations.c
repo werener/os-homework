@@ -43,7 +43,7 @@ void list(const char *img_path) {
 	}
 }
 
-void get(const char *img_path, byte *key, const char *file, const char *out) {
+void get(const char *img_path, byte *key, const char *name_searched, const char *out) {
 	// also includes validation
 	int file_count = count_files(img_path);
 	if (file_count == IMAGE_ERROR) {
@@ -63,11 +63,7 @@ void get(const char *img_path, byte *key, const char *file, const char *out) {
 		char *name_temp = malloc(metadata.name_len + 1);
 		fread(name_temp, metadata.name_len, 1, img_f);
 
-		printf("%s\n", name_temp);
-		printf("salt: %4s\n", metadata.salt);
-		printf("dl: %d, nl: %d\n", metadata.data_len, metadata.name_len);
-
-		if (strcasecmp(name_temp, file) == 0) {
+		if (strcasecmp(name_temp, name_searched) == 0) {
 			FILE *result_f = fopen(out, "wb");
 			if (!result_f) {
 				fprintf(stderr, "Cannot open %s", out);
