@@ -117,7 +117,7 @@ int run(const cli_args_t args) {
 
 	switch (args.command) {
 	case CMD_ADD:
-		// TODO
+		add(args.image, (unsigned char *) args.key, args.files, args.files_amount);
 		break;
 	case CMD_GET:
 		get(args.image, (unsigned char *) args.key, args.files[0], args.out);

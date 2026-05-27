@@ -6,8 +6,9 @@
 #include <asm-generic/errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <linux/time.h>
 
-pthread_mutex_t counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t fetch_file_mx = PTHREAD_MUTEX_INITIALIZER;
 
 void process_file(FILE *src_file, FILE *dest_file, const char *filename) {
 	char *buffer = malloc(BUFFER_SIZE);
@@ -48,7 +49,7 @@ void *worker(void *arg) {
 		clock_gettime(CLOCK_REALTIME, &timeout);
 		timeout.tv_sec += DEADLOCK_DETECTION_TIMER_SEC;
 
-		int lock_result = pthread_mutex_timedlock(&counter_mutex, &timeout);
+		int lock_result = pthread_mutex_timedlock(&fetch_file_mx, &timeout);
 		if (lock_result == ETIMEDOUT) {
 			fprintf(stderr, "Possible deadlock\n");
 			write_to_log("-", "ERROR: Deadlock");
@@ -57,7 +58,7 @@ void *worker(void *arg) {
 		}
 
 		if (args->sources_processed >= args->total_sources) {
-			pthread_mutex_unlock(&counter_mutex);
+			pthread_mutex_unlock(&fetch_file_mx);
 			break;
 		}
 
@@ -68,14 +69,14 @@ void *worker(void *arg) {
 		if (is_directory(filename)) {
 			fprintf(stderr, "(%i/%i) '%s' is a folder. Can't process it\n", currently_processing,
 					args->total_sources, filename);
-			pthread_mutex_unlock(&counter_mutex);
+			pthread_mutex_unlock(&fetch_file_mx);
 			continue;
 		}
 
 		fprintf(stderr, "(%i/%i) Processing '%s'\n", currently_processing, args->total_sources,
 				filename);
 
-		pthread_mutex_unlock(&counter_mutex); // Comment-out for deadlock
+		pthread_mutex_unlock(&fetch_file_mx); // Comment-out for deadlock
 
 		char *destination_folder = args->dest_name;
 		char *fullpath = make_copy_target(filename, destination_folder);

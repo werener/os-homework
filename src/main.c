@@ -20,15 +20,9 @@ void sigint_handler(int);
 void cleanup();
 
 int main(int argc, char **argv) {
-    // signal(SIGSEGV, segv_handler);
-    // signal(SIGINT, sigint_handler);
-
-    array_t *arr = unwind_folders(argv + 1, argc - 1);
-    for (int i = 0; i < arr->count; ++i) {
-        printf("(%d): %s\n", i, arr->data[i]);
-    }
-    array_free(arr);
-    return 0;
+    signal(SIGSEGV, segv_handler);
+    signal(SIGINT, sigint_handler);
+  
     /* Parse CLI arguments */
     cli_args_t args = {
         .bin_title = argv[0],

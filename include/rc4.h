@@ -3,12 +3,13 @@
 #include <stdint.h>
 
 #define N 256
+
 extern long PAGE_SIZE;
 typedef unsigned char byte;
 
 typedef struct {
-	byte S[N];
-	int i, j;
+    byte S[N];
+    int i, j;
 } state_t;
 
 state_t *rc4_init(byte *key);
