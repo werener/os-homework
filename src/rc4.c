@@ -10,10 +10,9 @@
 long PAGE_SIZE = -1;
 
 void swap(byte *a, byte *b) {
-
-    *a ^= *b;
-    *b ^= *a;
-    *b ^= *a;
+    byte tmp = *a;
+    *a = *b;
+    *b = tmp;
 }
 
 state_t *rc4_init(byte *key, int key_len) {
