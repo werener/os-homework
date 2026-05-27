@@ -88,7 +88,7 @@ int get(const char *img_path, byte *key, const char *name_searched, const char *
             // concatenate salt and the provided [key]
             byte *full_key = add_salt(metadata.salt, key, strlen((char *)key));
 
-            state_t *state = rc4_init(full_key);
+            state_t *state = rc4_init(full_key, strlen((char *)key) + SALT_SIZE);
             size_t bytes_remained = metadata.data_len;
             byte *buffer = malloc(BUFFER_SIZE);
             while (bytes_remained > 0) {

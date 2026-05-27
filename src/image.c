@@ -44,9 +44,12 @@ int count_files(const char *path) {
 }
 
 byte *add_salt(char salt[SALT_SIZE], byte *key, size_t len_key) {
-    byte *full_key = malloc(SALT_SIZE + len_key + 1);
-    memcpy(full_key, salt, SALT_SIZE);
-    memcpy(full_key + SALT_SIZE, key, len_key + 1);
+    byte *full_key = malloc(SALT_SIZE + len_key );
+    memcpy(full_key, key, len_key);
+    memcpy(full_key + len_key, salt, SALT_SIZE);
+    // byte *full_key = malloc(SALT_SIZE + len_key + 1);
+    // memcpy(full_key, salt, SALT_SIZE);
+    // memcpy(full_key + SALT_SIZE, key, len_key + 1);
 
     return full_key;
 }
@@ -105,7 +108,7 @@ void *add_worker(void *arg) {
 
         // prepare to write into image
         byte *full_key = add_salt(metadata.salt, args->key, args->len_key);
-        state_t *state = rc4_init(full_key);
+        state_t *state = rc4_init(full_key, args->len_key + SALT_SIZE);
         size_t bytes_remained = metadata.data_len;
         byte *buffer = malloc(BUFFER_SIZE);
 
