@@ -11,7 +11,8 @@ data_dir = data
 FLAGS = -Wall -Wextra -pedantic -I$(header_dir) -I$(lib_dir)
 
 target = secure_copy
-sources = queue.c caesar.c secure_copy.c main.c filepath.c logging.c args.c image.c image_operations.c rc4.c
+libs = queue.c array.c
+sources = $(libs) main.c filepath.c logging.c args.c image.c image_operations.c rc4.c
 objects = $(addprefix $(target_dir)/, $(sources:.c=.o))
 	
 testset = $(shell echo ./$(data_dir)/f{1..8}.txt)
@@ -26,10 +27,17 @@ clean:
 	@mkdir -p $(data_dir)/out
 	rm -f log.log
 
+# Binary compilation
 $(target_dir)/$(target): $(objects)
 	@mkdir -p $(@D)
 	@$(CC) $(FLAGS) $^ -o $@
 	@echo -e "\nFinished!"
+
+# Object compilation
+$(target_dir)/%.o: $(lib_dir)/%.c
+	@mkdir -p $(@D)
+	@echo -n "$@+  "
+	@$(CC) $(FLAGS) -I$(header_dir) -c $< -o $@
 
 $(target_dir)/%.o: $(source_dir)/%.c
 	@mkdir -p $(@D)

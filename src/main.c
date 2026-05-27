@@ -22,92 +22,102 @@ void segv_handler(int);
 void sigint_handler(int);
 void cleanup();
 
+#include "array.h"
 int main(int argc, char **argv) {
-	signal(SIGSEGV, segv_handler);
-	signal(SIGINT, sigint_handler);
+    signal(SIGSEGV, segv_handler);
+    signal(SIGINT, sigint_handler);
 
-	/* Parse CLI arguments */
-	cli_args_t args = {
-		.bin_title = argv[0],
-		.key = NULL,
-		.image = NULL,
-		.out = NULL,
-		.command = CMD_NONE,
-		.files = NULL,
-	};
+    array_t *array = array_init();
+	
+    for (int i = 0; i < argc; ++i) {
+        array_push(array, argv[i]);
+    }
 
-	static struct option long_options[] = {
-		{"key", required_argument, 0, KEY_OPT},
-		{"image", required_argument, 0, IMG_OPT},
-		{"out", required_argument, 0, OUT_OPT},
-		{"help", optional_argument, 0, 'h'},
-		{0, 0, 0, 0},
-	};
+    for (int i = 0; i < argc; ++i) {
+        printf("%s\n", array->data[i]);
+    }
+    return 0;
 
-	int opt, option_index = 0;
-	while ((opt = getopt_long(argc, (char *const *)argv, "k:i:o:h::?::",
-							  long_options, &option_index)) != -1) {
-		switch (opt) {
-		case KEY_OPT:
-			args.key = optarg;
-			break;
-		case IMG_OPT:
-			args.image = optarg;
-			break;
-		case OUT_OPT:
-			args.out = optarg;
-			break;
-		case '?':
-			help();
-			return EXIT_SUCCESS;
-		case 'h':
-			help();
-			return EXIT_SUCCESS;
-		default:
-			return EXIT_FAILURE;
-		}
-	}
+    /* Parse CLI arguments */
+    cli_args_t args = {
+        .bin_title = argv[0],
+        .key = NULL,
+        .image = NULL,
+        .out = NULL,
+        .command = CMD_NONE,
+        .files = NULL,
+    };
 
-	if (argc - optind > 0)
-		args.command = get_command(argv[optind]);
-	args.files_amount = argc - optind - 1;
-	args.files = argv + optind + 1;
+    static struct option long_options[] = {
+        {"key", required_argument, 0, KEY_OPT},
+        {"image", required_argument, 0, IMG_OPT},
+        {"out", required_argument, 0, OUT_OPT},
+        {"help", optional_argument, 0, 'h'},
+        {0, 0, 0, 0},
+    };
 
-	/* Setup logging */
-	// const char *LOGFILE = "log.log";
-	// log_file = fopen(LOGFILE, "a");
-	// if (!log_file) {
-	//     fprintf(stderr, "Failed to create %s", LOGFILE);
-	//     cleanup();
-	//     return EXIT_FAILURE;
-	// }
+    int opt, option_index = 0;
+    while ((opt = getopt_long(argc, (char *const *)argv, "k:i:o:h::?::",
+                              long_options, &option_index)) != -1) {
+        switch (opt) {
+        case KEY_OPT:
+            args.key = optarg;
+            break;
+        case IMG_OPT:
+            args.image = optarg;
+            break;
+        case OUT_OPT:
+            args.out = optarg;
+            break;
+        case '?':
+            help();
+            return EXIT_SUCCESS;
+        case 'h':
+            help();
+            return EXIT_SUCCESS;
+        default:
+            return EXIT_FAILURE;
+        }
+    }
 
-	run(args);
+    if (argc - optind > 0)
+        args.command = get_command(argv[optind]);
+    args.files_amount = argc - optind - 1;
+    args.files = argv + optind + 1;
 
-	// char *a = malloc(13);
-	// memcpy(a, &"aaaaaaaaaaaa\0", 13);
+    /* Setup logging */
+    // const char *LOGFILE = "log.log";
+    // log_file = fopen(LOGFILE, "a");
+    // if (!log_file) {
+    //     fprintf(stderr, "Failed to create %s", LOGFILE);
+    //     cleanup();
+    //     return EXIT_FAILURE;
+    // }
+
+    run(args);
+
+    // char *a = malloc(13);
+    // memcpy(a, &"aaaaaaaaaaaa\0", 13);
 
     // test(args.key, a, 13);
 
-	cleanup();
-	return EXIT_SUCCESS;
+    cleanup();
+    return EXIT_SUCCESS;
 }
 
 inline void cleanup() {
-	free_page();
-	close_log();
 }
 
 void segv_handler(int sig) {
-	fprintf(stderr, "%d: Read of protected memory detected\n", sig);
-	log_custom_message("\tExited programm with segmentation fault\n\n");
-	cleanup();
-	_exit(sig);
+    fprintf(stderr, "%d: Read of protected memory detected\n", sig);
+    log_custom_message("\tExited programm with segmentation fault\n\n");
+    cleanup();
+    _exit(sig);
 }
 
 void sigint_handler(int sig) {
-	fprintf(stderr, "%d: Keyboard interruption\n", sig);
-	log_custom_message("\tExited program with keyboard interruption\n\n");
-	cleanup();
-	_exit(sig);
+    fprintf(stderr, "%d: Keyboard interruption\n", sig);
+    log_custom_message("\tExited program with keyboard interruption\n\n");
+    cleanup();
+    _exit(sig);
 }

@@ -7,4 +7,4 @@ void list(const char *img_path);
 
 void get(const char *img_path, byte *key, const char *file, const char *out);
 
-// todo: void add();
+void add(const char *img_path, byte *key, const char **files);

@@ -111,3 +111,5 @@ void get(const char *img_path, byte *key, const char *name_searched, const char 
 	}
 	fclose(img_f);
 }
+
+// void add(const char *img_path, byte *key, const char **files) {}
