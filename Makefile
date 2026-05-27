@@ -11,7 +11,7 @@ data_dir = data
 FLAGS = -Wall -Wextra -pedantic -I$(header_dir) -I$(lib_dir)
 
 target = secure_copy
-libs = queue.c array.c
+libs = array.c
 sources = $(libs) main.c filepath.c logging.c args.c image.c image_operations.c rc4.c
 objects = $(addprefix $(target_dir)/, $(sources:.c=.o))
 	

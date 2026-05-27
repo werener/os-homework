@@ -10,9 +10,9 @@
 long PAGE_SIZE = -1;
 
 void swap(byte *a, byte *b) {
-	*a ^= *b;
-	*b ^= *a;
-	*a ^= *b;
+	byte tmp = *a;
+    *a = *b;
+    *b = tmp;
 }
 
 state_t *rc4_init(byte *key) {
@@ -66,12 +66,6 @@ inline void free_state(state_t *state) {
 	mprotect(state, PAGE_SIZE, PROT_WRITE);
 	memset(state, 0, PAGE_SIZE);
 	munmap(state, PAGE_SIZE);
-}
-
-void rc4(byte *data, const int32_t len, byte *key) {
-	state_t *state = rc4_init(key);
-	rc4_apply(state, data, len);
-	free_state(state);
 }
 
 void test(byte *key, byte *data, const int32_t len) {
