@@ -6,6 +6,7 @@
 #include <string.h>
 #include <strings.h>
 
+#define MAX_ALLOWED_FILENAME ((int32_t)63)
 #define WORKER_COUNT 4
 
 typedef struct {
@@ -38,10 +39,19 @@ int list(const char *img_path) {
     for (int i = 0; i < file_count; ++i) {
         // read metadata of the file
         fread(&metadata, sizeof(metadata_t), 1, img_f);
-        // save its namez
+        // save its name
         entries[i].data_len = metadata.data_len;
-        entries[i].name = malloc(metadata.name_len + 1);
-        fread(entries[i].name, metadata.name_len, 1, img_f);
+
+        // if the name is too large, show only first 60 bytes and show '...'
+        int32_t allowed_size = metadata.name_len > MAX_ALLOWED_FILENAME
+                                   ? MAX_ALLOWED_FILENAME
+                                   : metadata.name_len;
+        entries[i].name = malloc(allowed_size + 1);
+        fread(entries[i].name, allowed_size, 1, img_f);
+        if (allowed_size == MAX_ALLOWED_FILENAME) {
+            for (int j = 0; j < 3; ++j)
+                entries[j].name[MAX_ALLOWED_FILENAME - i - 1] = '.';
+        }
         // go to the next metadata block
         fseek(img_f, metadata.data_len, SEEK_CUR);
     }
