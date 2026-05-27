@@ -22,22 +22,17 @@ void segv_handler(int);
 void sigint_handler(int);
 void cleanup();
 
-#include "array.h"
+#include "filepath.h"
 int main(int argc, char **argv) {
-    signal(SIGSEGV, segv_handler);
-    signal(SIGINT, sigint_handler);
+    // signal(SIGSEGV, segv_handler);
+    // signal(SIGINT, sigint_handler);
 
-    array_t *array = array_init();
-	
-    for (int i = 0; i < argc; ++i) {
-        array_push(array, argv[i]);
-    }
-
-    for (int i = 0; i < argc; ++i) {
-        printf("%s\n", array->data[i]);
-    }
-    return 0;
-
+	array_t *arr = unwind_folders(argv + 1, argc - 1);
+	for (int i = 0; i < arr->count; ++i) {
+		printf("(%d): %s\n",i, arr->data[i]);
+	}
+	array_free(arr);
+	return 0;
     /* Parse CLI arguments */
     cli_args_t args = {
         .bin_title = argv[0],
