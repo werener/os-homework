@@ -1,6 +1,7 @@
 #pragma once
 
 #include "image_operations.h"
+#include "logging.h"
 
 #include <stdbool.h>
 
@@ -28,5 +29,3 @@ typedef struct {
 void help();
 
 bool validate_args(const cli_args_t);
-
-int run(const cli_args_t);

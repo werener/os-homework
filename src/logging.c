@@ -24,10 +24,8 @@ void write_to_log(const char *filename, const char *status) {
     time_info = localtime(&raw_time);
     strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", time_info);
 
-    pid_t thread_id = syscall(SYS_gettid);
-
-    fprintf(log_file, "[%s] Thread ID: %d | File: %s | Status: %s\n",
-            timestamp, thread_id, filename, status);
+    fprintf(log_file, "[%s] File: %s | Status: %s\n",
+            timestamp, filename, status);
     fflush(log_file);
 
     pthread_mutex_unlock(&log_mutex);

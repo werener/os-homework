@@ -1,4 +1,5 @@
 #include "image_operations.h"
+#include "logging.h"
 
 #include <pthread.h>
 #include <stdlib.h>
@@ -14,15 +15,17 @@ int compare_names(const void *ln, const void *rn) {
     return strcasecmp(*ls, *rs);
 }
 
-void list(const char *img_path) {
+int list(const char *img_path) {
+    fprintf(log_file, "\nListing files from '%s'\n", img_path);
+
     // also includes validation
     int file_count = count_files(img_path);
     if (file_count == IMAGE_ERROR) {
-        return;
+        return EXIT_FAILURE;
     }
     if (file_count == 0) {
         fprintf(stderr, "Empty image\n");
-        return;
+        return EXIT_SUCCESS;
     }
 
     FILE *img_f = fopen(img_path, "rb");
@@ -37,7 +40,7 @@ void list(const char *img_path) {
         // go to the next metadata block
         fseek(img_f, metadata.data_len, SEEK_CUR);
     }
-
+    
     qsort(filenames, file_count, sizeof(sizeof(char *)), compare_names);
 
     for (int i = 0; i < file_count; ++i) {
@@ -46,17 +49,21 @@ void list(const char *img_path) {
         free(filenames[i]);
     }
     fclose(img_f);
+
+    return EXIT_SUCCESS;
 }
 
-void get(const char *img_path, byte *key, const char *name_searched, const char *out) {
+int get(const char *img_path, byte *key, const char *name_searched, const char *out) {
+    fprintf(log_file, "\nSaving '%s' from '%s' to '%s'\n", name_searched, img_path, out);
+
     // also includes validation
     int file_count = count_files(img_path);
     if (file_count == IMAGE_ERROR) {
-        return;
+        return EXIT_FAILURE;
     }
     if (file_count == 0) {
         printf("Empty image\n");
-        return;
+        return EXIT_SUCCESS;
     }
 
     FILE *img_f = fopen(img_path, "rb");
@@ -73,9 +80,9 @@ void get(const char *img_path, byte *key, const char *name_searched, const char 
             // try opening [out]
             FILE *out_f = fopen(out, "wb");
             if (!out_f) {
-                fprintf(stderr, "Cannot open %s", out);
+                fprintf(stderr, "Cannot open '%s'", out);
                 free(name_cur);
-                return;
+                return EXIT_FAILURE;
             }
 
             // concatenate salt and the provided [key]
@@ -100,7 +107,7 @@ void get(const char *img_path, byte *key, const char *name_searched, const char 
             free_state(state);
             fclose(out_f);
             fclose(img_f);
-            return;
+            return EXIT_SUCCESS;
         }
 
         // go to the next metadata block
@@ -108,25 +115,29 @@ void get(const char *img_path, byte *key, const char *name_searched, const char 
         free(name_cur);
     }
     fclose(img_f);
+    printf("No file '%s' on image '%s'\n", name_searched, img_path);
+    return EXIT_SUCCESS;
 }
 
-void add(const char *img_path, byte *key, char **files, int file_amount) {
+int add(const char *img_path, byte *key, char **files, int file_amount) {
+    fprintf(log_file, "\nAdding files (%d) to '%s'\n", file_amount, img_path);
+
     FILE *img_f = fopen(img_path, "a");
     if (!img_f) {
-        fprintf(stderr, "Image file %s doesn't exist. Creating it\n", img_path);
+        fprintf(stderr, "Image file '%s' doesn't exist. Creating it\n", img_path);
         img_f = fopen(img_path, "w");
         if (!img_f) {
-            fprintf(stderr, "Cannot create %s\n", img_path);
-            return;
+            fprintf(stderr, "Cannot create '%s'\n", img_path);
+            return EXIT_FAILURE;
         }
     }
-	fclose(img_f);
+    fclose(img_f);
     img_f = fopen(img_path, "a");
 
     FILE *urandom = fopen("/dev/urandom", "rb");
     if (!urandom) {
         fprintf(stderr, "Cannot open '/dev/urandom'\n");
-        return;
+        return EXIT_FAILURE;
     }
     fclose(urandom);
 
@@ -147,4 +158,6 @@ void add(const char *img_path, byte *key, char **files, int file_amount) {
     }
     fclose(img_f);
     array_free(args.files);
+
+    return EXIT_SUCCESS;
 }

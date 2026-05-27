@@ -9,7 +9,7 @@
 int count_files(const char *path) {
     FILE *img_f = fopen(path, "rb");
     if (!img_f) {
-        fprintf(stderr, "Image file %s couldn't be opened\n", path);
+        fprintf(stderr, "Image file '%s' couldn't be opened\n", path);
         return IMAGE_ERROR;
     }
 
@@ -23,7 +23,7 @@ int count_files(const char *path) {
         // Not enough metadata, though there should be
         if ((long)sizeof(metadata_t) + ftell(img_f) > size) {
             fclose(img_f);
-            fprintf(stderr, "Wrong file format: %s\n", path);
+            fprintf(stderr, "Wrong file format: '%s'\n", path);
             return IMAGE_ERROR;
         }
 
@@ -32,7 +32,7 @@ int count_files(const char *path) {
         // Metadata is incorrect
         if (ftell(img_f) + bytes_till_next_file > size) {
             fclose(img_f);
-            fprintf(stderr, "Wrong file format: %s\n", path);
+            fprintf(stderr, "Wrong file format: '%s'\n", path);
             return IMAGE_ERROR;
         }
 
@@ -64,7 +64,7 @@ void *add_worker(void *arg) {
         int lock_res = pthread_mutex_timedlock(&fetch_file_mx, &timeout);
         if (lock_res == ETIMEDOUT) {
             fprintf(stderr, "Possible deadlock\n");
-            write_to_log("-", "ERROR: Deadlock");
+            write_to_log("-", "ERROR - Deadlock");
             break;
         }
 
@@ -80,6 +80,7 @@ void *add_worker(void *arg) {
 
         char *cur_name = args->files->data[currently_processing];
         fprintf(stderr, "(%i/%li) Processing '%s'\n", currently_processing, args->files->count, cur_name);
+		
 
         // start processing file
         FILE *cur_f = fopen(cur_name, "rb");
@@ -108,12 +109,11 @@ void *add_worker(void *arg) {
         size_t bytes_remained = metadata.data_len;
         byte *buffer = malloc(BUFFER_SIZE);
 
+		write_to_log(cur_name, "In process");
         // start writing current file into image
         pthread_mutex_lock(&image_mx);
 
-        fwrite(&metadata.data_len, 1, sizeof(int32_t), args->img_f);
-		fwrite(&metadata.name_len, 1, sizeof(int32_t), args->img_f);
-		fwrite(&metadata.salt, 1, SALT_SIZE, args->img_f);
+		fwrite(&metadata, 1, sizeof(metadata_t), args->img_f);
 		fwrite(cur_name, 1, metadata.name_len, args->img_f);
         while (bytes_remained > 0) {
             size_t chunk_size = bytes_remained >= BUFFER_SIZE
@@ -127,7 +127,8 @@ void *add_worker(void *arg) {
         }
 
         pthread_mutex_unlock(&image_mx);
-
+		write_to_log(cur_name, "Finished");
+		
         fclose(cur_f);
         free_state(state);
         free(full_key);
