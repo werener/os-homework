@@ -36,3 +36,7 @@ int count_files(const char *path) {
 	fclose(img_f);
 	return filecount;
 }
+
+// void *worker(void *arg) {
+
+// };

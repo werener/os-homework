@@ -1,8 +1,5 @@
 #include "args.h"
-#include "caesar.h"
 #include "logging.h"
-#include "rc4.h"
-#include "secure_copy.h"
 
 #include <getopt.h>
 #include <signal.h>
@@ -22,17 +19,16 @@ void segv_handler(int);
 void sigint_handler(int);
 void cleanup();
 
-#include "filepath.h"
 int main(int argc, char **argv) {
     // signal(SIGSEGV, segv_handler);
     // signal(SIGINT, sigint_handler);
 
-	array_t *arr = unwind_folders(argv + 1, argc - 1);
-	for (int i = 0; i < arr->count; ++i) {
-		printf("(%d): %s\n",i, arr->data[i]);
-	}
-	array_free(arr);
-	return 0;
+    array_t *arr = unwind_folders(argv + 1, argc - 1);
+    for (int i = 0; i < arr->count; ++i) {
+        printf("(%d): %s\n", i, arr->data[i]);
+    }
+    array_free(arr);
+    return 0;
     /* Parse CLI arguments */
     cli_args_t args = {
         .bin_title = argv[0],

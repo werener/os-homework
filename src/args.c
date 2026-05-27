@@ -1,5 +1,4 @@
 #include "args.h"
-#include "image_operations.h"
 
 #include <stdio.h>
 #include <stdlib.h>

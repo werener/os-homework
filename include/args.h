@@ -1,5 +1,6 @@
 #pragma once
 
+#include "image_operations.h"
 
 #include <stdbool.h>
 
