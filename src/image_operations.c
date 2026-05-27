@@ -5,10 +5,10 @@
 #include <strings.h>
 
 int compare_names(const void *ln, const void *rn) {
-	const char *ls = (const char *)ln;
-	const char *rs = (const char *)rn;
+    const char * const *ls = (const char * const *)ln;
+    const char * const *rs = (const char * const *)rn;
 
-	return strcasecmp(rs, ls);
+    return strcasecmp(*ls, *rs);
 }
 
 void list(const char *img_path) {
