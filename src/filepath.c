@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-char *normalize_path(char *path);
+void normalize_path(char *path);
 void collect_file(array_t *arr, char *path);
 
 array_t *unwind_folders(char **files, int files_amount) {
@@ -25,7 +25,8 @@ void collect_file(array_t *arr, char *path) {
 
     // easy-handled cases
     if (S_ISREG(st.st_mode)) {
-        array_push(arr, normalize_path(path));
+		normalize_path(path);
+        array_push(arr, path);
 		return;
     }
     if (!S_ISDIR(st.st_mode)) {
@@ -53,16 +54,15 @@ void collect_file(array_t *arr, char *path) {
         snprintf(full_path, full_len, "%s/%s", path, entry->d_name);
 
         // recursively descent down into folder structure
-        collect_file(arr, normalize_path(full_path));
+		normalize_path(full_path);
+        collect_file(arr, full_path);
+		free(full_path);
     }
     closedir(dir);
 }
 
-char *normalize_path(char *path) {
+void normalize_path(char *path) {
     size_t len = strlen(path);
-    if (len == 0) {
-        return strdup("");
-    }
 
     char *result = malloc(len + 1);
 
@@ -88,5 +88,7 @@ char *normalize_path(char *path) {
     }
 
     result[j] = '\0';
-    return result;
+
+	memcpy(path, result, len);
+	free(result);
 }
