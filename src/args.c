@@ -94,12 +94,9 @@ void parse_arguments(int argc, char **argv, cli_args_t *args) {
 			args->files[args->files_amount++] = argv[i];
 		}
 	} else if (args->command == CMD_GET) {
-		// For GET: the last argument is file_name
 		if (argc > 1 && args->out != NULL) {
-			// Find the last non-option argument
 			for (int i = argc - 1; i >= 1; i--) {
 				if (argv[i][0] != '-') {
-					// Check if it's not a value for -key, -image, or -out
 					if (i > 1 && (strcmp(argv[i - 1], "-key") == 0 ||
 								  strcmp(argv[i - 1], "-image") == 0 ||
 								  strcmp(argv[i - 1], "-out") == 0)) {

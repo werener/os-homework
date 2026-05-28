@@ -28,4 +28,5 @@ typedef struct {
 
 void help();
 
+bool validate_args(const cli_args_t args);
 void parse_arguments(int argc, char **argv, cli_args_t *args);

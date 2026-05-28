@@ -91,51 +91,62 @@ void *add_worker(void *arg) {
 			continue;
 		}
 
+		write_to_log(cur_name, "Started");
+
+		// read metadata
 		metadata_t metadata;
 		fseek(cur_f, 0, SEEK_END);
 		metadata.data_len = ftell(cur_f);
 		rewind(cur_f);
 
 		metadata.name_len = strlen(cur_name);
-
 		for (int i = 0; i < SALT_SIZE; ++i) {
 			metadata.salt[i] = (byte)(rand() & 0xFF);
 		}
 
-		write_to_log(cur_name, "In process");
-
+		// prepare rc4 for ecnoding
 		byte *full_key = add_salt(metadata.salt, args->key, args->len_key);
 		state_t *state = rc4_init(full_key, args->len_key + SALT_SIZE);
 
 		size_t img_filesize =
 			sizeof(metadata_t) + metadata.name_len + metadata.data_len;
 
-        // start fetching offset for cur_file
+		// start fetching offset for cur_file
+		write_to_log(cur_name, "Locked img_mx");
 		pthread_mutex_lock(&image_mx);
 
+		// rounding to exact page boundary
 		off_t map_offset = (args->curr_offset / PAGE_SIZE) * PAGE_SIZE;
+		// memory alignment offset (roundoff from the prev. operation)
 		size_t delta = args->curr_offset - map_offset;
+		// what position exactly the file will take
 		size_t map_len = delta + img_filesize;
 
-		// extend/truncate image file to have its memory aligned
+		// extend image file to have its memory aligned
 		if (ftruncate(args->img_fd, map_offset + map_len) == -1) {
-			fprintf(stderr, "Failed truncation on offset %ld for size %ld\n", map_offset, map_len);
+			fprintf(stderr, "Failed truncation on offset %ld for size %ld\n",
+					map_offset, map_len);
 			pthread_mutex_unlock(&image_mx);
+			write_to_log(cur_name, "Failed truncation");
 			free(full_key);
 			free_state(state);
 			fclose(cur_f);
 			continue;
 		}
 
+		// MAP_SHARED
 		byte *img_map = mmap(NULL, map_len, PROT_READ | PROT_WRITE, MAP_SHARED,
 							 args->img_fd, map_offset);
 
-        // 
+		// increment current offset by the size of just allocated file
+		// so that the other threads can start their offset computation
 		args->curr_offset += img_filesize;
-		
-        pthread_mutex_unlock(&image_mx);
 
-        // continue the actual writing to the fetched offset
+        // stopped working with offset for cur_file
+		pthread_mutex_unlock(&image_mx);
+		write_to_log(cur_name, "Let go of image_mx");
+
+		// continue the actual writing to the fetched offset
 		if (img_map == MAP_FAILED) {
 			fprintf(stderr, "mmap failed for file '%s'\n", cur_name);
 			free(full_key);
@@ -168,10 +179,11 @@ void *add_worker(void *arg) {
 			bytes_remained -= read_bytes;
 		}
 
-        // Deallocate any mapping for the region starting at ADDR and extending LEN
+		// Deallocate any mapping for the region starting at ADDR and extending
+		// LEN
 		munmap(img_map, map_len);
-		
-        free(buffer);
+
+		free(buffer);
 		free(full_key);
 		free_state(state);
 		fclose(cur_f);
