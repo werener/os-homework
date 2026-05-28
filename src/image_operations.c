@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <time.h>
 
 #define MAX_ALLOWED_FILENAME ((uint32_t)63)
 #define WORKER_COUNT 4
@@ -89,7 +93,6 @@ int get(const char *img_path, byte *key, const char *name_searched, const char *
         // read metadata of the file
         fread(&metadata, sizeof(metadata_t), 1, img_f);
 
-        
         // if the name is too large, show only first 60 bytes and show '...'
         int32_t allowed_size = metadata.name_len > MAX_ALLOWED_FILENAME
                                    ? MAX_ALLOWED_FILENAME
@@ -105,8 +108,9 @@ int get(const char *img_path, byte *key, const char *name_searched, const char *
             // try opening [out]
             FILE *out_f = fopen(out, "wb");
             if (!out_f) {
-                fprintf(stderr, "Cannot open '%s'", out);
+                fprintf(stderr, "Cannot open '%s'\n", out);
                 free(name_cur);
+                fclose(img_f);
                 return EXIT_FAILURE;
             }
 
@@ -144,28 +148,36 @@ int get(const char *img_path, byte *key, const char *name_searched, const char *
     return EXIT_SUCCESS;
 }
 
+
 int add(const char *img_path, byte *key, char **files, int file_amount) {
     add_args_t args = {
         .files = unwind_folders(files, file_amount),
         .processed = 0,
         .key = key,
         .len_key = strlen((char *)key),
-        .img_f = NULL,
+        .img_fd = -1,
+        .curr_offset = 0,
     };
     fprintf(log_file, "\nAdding files (%ld) to '%s'\n", args.files->count, img_path);
 
-    FILE *img_f = fopen(img_path, "a");
-    if (!img_f) {
-        fprintf(stderr, "Image file '%s' doesn't exist. Creating it\n", img_path);
-        img_f = fopen(img_path, "w");
-        if (!img_f) {
-            fprintf(stderr, "Cannot create '%s'\n", img_path);
-            return EXIT_FAILURE;
-        }
+    // open through descriptor
+    int fd = open(img_path, O_RDWR | O_CREAT, 0644);
+    if (fd == -1) {
+        fprintf(stderr, "Cannot open or create image file '%s'\n", img_path);
+        array_free(args.files);
+        return EXIT_FAILURE;
     }
-    fclose(img_f);
-    img_f = fopen(img_path, "a");
-    args.img_f = img_f;
+
+    off_t current_size = lseek(fd, 0, SEEK_END);
+    if (current_size == -1) {
+        perror("lseek failed");
+        close(fd);
+        array_free(args.files);
+        return EXIT_FAILURE;
+    }
+    
+    args.img_fd = fd;
+    args.curr_offset = (size_t)current_size;
 
     srand(time(NULL));
     pthread_t pool[WORKER_COUNT];
@@ -175,7 +187,8 @@ int add(const char *img_path, byte *key, char **files, int file_amount) {
     for (int i = 0; i < WORKER_COUNT; ++i) {
         pthread_join(pool[i], NULL);
     }
-    fclose(img_f);
+    
+    close(fd);
     array_free(args.files);
 
     return EXIT_SUCCESS;

@@ -54,42 +54,7 @@ int main(int argc, char **argv) {
         .files = NULL,
     };
 
-    static struct option long_options[] = {
-        {"key", required_argument, 0, KEY_OPT},
-        {"image", required_argument, 0, IMG_OPT},
-        {"out", required_argument, 0, OUT_OPT},
-        {"help", optional_argument, 0, 'h'},
-        {0, 0, 0, 0},
-    };
-
-    int opt, option_index = 0;
-    while ((opt = getopt_long(argc, (char *const *)argv, "k:i:o:h::?::",
-                              long_options, &option_index)) != -1) {
-        switch (opt) {
-        case KEY_OPT:
-            args.key = optarg;
-            break;
-        case IMG_OPT:
-            args.image = optarg;
-            break;
-        case OUT_OPT:
-            args.out = optarg;
-            break;
-        case '?':
-            help();
-            return EXIT_SUCCESS;
-        case 'h':
-            help();
-            return EXIT_SUCCESS;
-        default:
-            return EXIT_FAILURE;
-        }
-    }
-
-    if (argc - optind > 0)
-        args.command = get_command(argv[optind]);
-    args.files_amount = argc - optind - 1;
-    args.files = argv + optind + 1;
+    parse_arguments(argc, argv, &args);
 
     /* Setup logging */
     const char *LOGFILE = "log.log";
